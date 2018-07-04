@@ -1,0 +1,226 @@
+\documentclass{beamer}
+\usetheme{Boadilla}
+
+\usepackage[utf8]{inputenc}
+\usepackage[english]{babel}
+
+\usepackage{amsmath}
+
+\usepackage{hyperref}
+
+\bibliographystyle{named} 
+
+\title[Bayesian mixed-frequency DFMs]{Forecasting with Bayesian mixed-frequency dynamic factor models}
+
+%\subtitle{Real-time forecasting with Bayesian mixed-frequency models}
+% TODO real-time refers to evaluation real time data
+
+\author{Daniel Schmidt}
+
+\AtBeginSection[]
+{
+	\begin{frame}
+	\frametitle{Table of Contents}
+	\tableofcontents[currentsection]
+	\end{frame}
+}
+
+\begin{document}
+
+\frame{\titlepage}
+
+\section{The big picture: Macroeconomic forecasting}
+
+\begin{frame}
+\frametitle{Macroeconomic forecasting}
+\textbf{Challenges:}
+\begin{itemize}
+\item large number of potential predictors available         % dynamic factor model
+\item variables are sampled at different frequencies  % mixed-frequency part
+\item some predictors are subject to publication lags        % nowcasting
+\item some predictors are subject to revisions               % real-time data
+\item predictive relationships are often not stable                % difficult to address
+\end{itemize}
+% TODO point vs density, Bayesian vs frequentist here?
+\end{frame}
+
+\section{Dynamic factor models and mixed-frequency data}
+
+\begin{frame}
+\frametitle{A simple dynamic factor model}
+\begin{align}
+y^*_{i,t} &= \mu_i + \lambda_i f_{t} + u_{i,t}     \label{eq:dfm_obs} \\
+f_t &= \phi f_{t-1} + v_t                \label{eq:dfm_trans_f}   \\
+u_{i,t} &= \psi_{1i} u_{i,t-1} + w_{i,t} \label{eq:dfm_trans_u}
+\end{align}
+with $v_t \sim \mathrm{Normal}(0,\sigma^2_v)$ and $w_{i,t} \sim \mathrm{Normal}(0,\sigma^2_{w,i})$
+\\ \vspace{0.5cm}
+Identification problem: $\lambda_i' f_t' = \lambda_i f_t$ for any $\lambda_i' = c \lambda_i$ and $f_t = f_t/c$ 
+\\ \vspace{0.5cm}
+\pause
+Possible extensions:
+\begin{itemize} % TODO move to the end of the theory section
+\item more general dynamics than AR(1) in eq.~\ref{eq:dfm_trans_f} and eq.~\ref{eq:dfm_trans_u}
+\item more than one factor
+\item observations may depend on lags of $f_t$ in eq.~\ref{eq:dfm_obs}
+\item stochastic volatility in $v_t$ and $w_{i,t}$ 
+\end{itemize}
+\end{frame}
+
+\begin{frame}
+\frametitle{Missing observations and mixed-frequency data}
+\textbf{Missing observations}\\
+filter out unobserved $y^*_{i,t}$ in eq.~\ref{eq:dfm_obs} with a matrix $S_t$ such that 
+\begin{align}
+y_t = S_t y^*_t = S_t\mu + S_t \lambda f_t + S_t u_t
+\end{align}
+\textbf{Mixed-frequency data (e.g.~quarterly and monthly)}\\
+$t$ is measured in months \\
+every third month of a quarter, we observe quarterly GDP growth $y_{1,t}$\footnote{
+both $y_{1,t}$ and its unobserved monthly counterpart $y^*_{1,t}$ are annualized rates here
+}:
+\begin{align}
+y_{1,t} &= w(L) y^*_{1,t} \\
+ &= 3\mu_1 + \lambda_1 w(L) f_t + w(L) u_{1,t}
+\end{align}
+with $w(L) = \frac{1}{3} + \frac{2}{3} L + L^2 + \frac{2}{3} L^3 + \frac{1}{3} L^4$\\
+(see Mariano and Murasawa, 2003)
+\end{frame}
+
+\section{The (preliminary) idea for my master's thesis}
+
+\begin{frame}
+\frametitle{The (preliminary) idea for my master's thesis}
+Marcellino et~al.'s (2016) starting point is the simple model in eq.~\ref{eq:dfm_obs}-\ref{eq:dfm_trans_u}
+\vspace{0.5cm}\\
+\textbf{What I like:}
+\begin{itemize}
+\item density forecasts
+\item stochastic volatility $v_t$ and $w_{i,t}$ 
+\end{itemize}
+\vspace{0.5cm}
+\textbf{What I would like to do differently}
+\begin{itemize}
+\item variable selection via a sparse prior on $\lambda$\footnote{
+This has already been done (e.g.~Kaufmann and Schumacher, 2017), but - to my best knowledge - not in a forecasting/ mixed-frequency context.
+}
+\item more than one factor
+\item include lagged factors into eq.~\ref{eq:dfm_obs}
+\end{itemize}
+\end{frame}
+
+\section{Bayesian estimation}
+
+\begin{frame}
+\frametitle{Gibbs sampler}
+\begin{itemize}
+\item draw from $p(\theta, f_{-3:T}|y_{1:T})$ with a Gibbs sampler that cycles through
+\begin{itemize}
+\normalsize
+\vspace{4mm}
+\item $p(f_{-3:T}|\theta, y_{1:T})$ $\rightarrow$ use a simulation smoother
+\vspace{4mm}
+\item $p(\phi, \sigma_{v}^2|f_{-3:T}) \propto p(f_{-3:T}|\phi, \sigma_{v}^2) p(\phi) p(\sigma_v^2)$
+\vspace{4mm}
+\item $p(\mu, \lambda, \psi, \sigma_{w}^2|y_{1:T}, f_{-3:T}) \propto p(y_{1:T}|f_{-3:T}) p(\mu) p(\lambda) p(\psi) p(\sigma_{w}^2)$
+\vspace{4mm}
+\end{itemize}
+\item simulate $x_{t+1}$ and $y_{t+1}$ with the samples from $p(\theta, x_{1:t}|y_{1:t})$
+\end{itemize}
+\end{frame}
+
+\begin{frame}
+\frametitle{Step 1: $p(f_{-3:T}|\theta, y_{1:T})$}
+general state space model:
+\begin{align}
+\label{eqn:ssm_obs}
+y_t &= \mu + B x_t + \epsilon_t \\
+x_t &= A x_{t-1} + \eta_t
+\end{align}
+with $x_1\sim \mathrm{Normal}(\mu_{x,1}, \Sigma_{x,1})$\\
+\vspace{0.5cm}
+Brute-force approach
+\begin{itemize}
+\item $x_t = [f_t, \dots f_{t-4}, u_{1,t}, \dots u_{1, t-4}, u_{2,t}, \dots u_{n,t}]$
+\item discard draws of the idiosyncratic components
+\end{itemize}
+\vspace{0.5cm}
+Transformation approach
+\begin{itemize}
+\item find a different state space representation such that $\epsilon_t=w_t$
+\item $x_t = [f_t, \dots f_{t-4}]$
+\end{itemize}
+\end{frame}
+
+\begin{frame}
+\frametitle{Step 2: $p(\phi, \sigma_{v}^2|f_{-3:T})$}
+\begin{align}
+p(f_{-3:T}|\phi, \sigma_{v}^2) &= p(f_{-3:1}|\phi, \sigma_{v}^2)\prod_{t=2:T} p(f_t|f_{t-1}, \phi, \sigma_{v}^2)
+\end{align}
+Problem:
+\begin{itemize}
+	\item natural choice for $p(f_{-3:1}|\phi, \sigma_{v}^2)$: unconditional distribution of an AR(1) process
+	\item but then, there is no closed-form solution for the full conditional posterior $p(\phi |f_{-3:T}, \sigma_{v}^2)$
+\end{itemize}
+Possible solutions:
+\begin{itemize}
+	\item Metropolis-Hastings step (or slice sampling)
+	\item use a distribution $p(f_{-3:1}|\phi, \sigma_{v}^2)$ that does not depend on $\phi$ and $\sigma_v^2$
+\end{itemize}
+\end{frame}
+
+\begin{frame}
+\frametitle{Step 3: $p(\mu, \lambda, \psi, \sigma_{w}^2|y_{1:T}, f_{-3:T})$ - monthly variables}
+linear regression with AR errors:\\
+\begin{align}
+y_{i,t} &= \mu_i + \lambda_i f_t + u_{i,t} \\
+u_{i,t} &= \psi_i u_{i,t-1}
+\end{align}
+Brute-force approach:\\
+$y_{i,1:T}|f_{1:T}$ normally distributed with mean $\mu_i + \lambda_i f_{1:T}$ and variance-covariance matrix $\mathrm{E}(u_{i,1:T} u_{i,1:T}')$ with
+\begin{align}
+\mathrm{E}(u_{i,t}, u_{i,t-\Delta t}) = \frac{\sigma_{w,i}^2}{1-\psi_i^2} |\psi_i|^{\Delta t}
+\end{align}
+Transformation approach:
+\begin{align}
+y_{i,t}-\phi y_{i,t-1} = (1-\phi)\mu_i + \lambda_i (f_t - \phi f_{t-1}) + w_{i,t}
+\end{align}
+\end{frame}
+
+\begin{frame}
+\frametitle{Step 3: $p(\mu, \lambda, \psi, \sigma_{w}^2|y_{1:T}, f_{-3:T})$ - quarterly variables}
+linear regression with ARMA errors:\\
+\begin{align}
+y_{i,t} &= \mu_i + \lambda_i w(L)f_t + e_{i,t} \\
+e_{i,t} &= \psi_i e_{i,t-1} + \frac{1}{3}w_t + \frac{2}{3}w_{t-1} + w_{t-2} + \frac{2}{3}w_{t-3} + \frac{1}{3}w_{t-4}
+\end{align}
+Brute-force approach:\\
+$y_{i,1:T}|f_{1:T}$ normally distributed with mean $\mu_i + \lambda_i f_{1:T}$ and some (complicated) variance-covariance matrix\\
+\vspace{0.5cm}
+Transformation approach:\\
+is possible (Chib and Greenberg, 1994)
+\end{frame}
+
+\begin{frame}
+\frametitle{Questions}
+\begin{itemize}
+\item What's your opinion on my topic?
+\item Are there any obvious errors/ flaws in the model and the estimation procedure?
+\item Should I use the unconditional distribution of an AR process for the initialization of the simulation smoother?
+\end{itemize}
+\end{frame}
+
+\section{References}
+
+\begin{frame}
+\frametitle{References}   
+\begin{thebibliography}{9}
+\bibitem{ChibGreenberg1994} S.~Chib and E.~Greenberg (1994). Bayes inference in regression models with ARMA(p, q) errors. \textit{Journal of Econometrics}.
+\bibitem{KaufmannSchumacher2017} S.~ Kaufmann and C.~ Schumacher (2017). Identifying relevant and irrelevant variables in sparse factor models. \textit{Journal of Applied Econometrics}.
+\bibitem{MarcellinoEtal2016} M.~ Marcellino, M.~Porqueddu and F.~Venditti (2016). Short-Term GDP Forecasting With a Mixed-Frequency Dynamic Factor Model With Stochastic Volatility. \textit{Journal of Business \& Economic Statistics}.
+\bibitem{MarianoMurasawa2003} R.~Mariano and Y.~Murasawa (2003). A New Coincident Index of Business Cycles Based on Monthly and Quarterly Series. \textit{Journal of Applied Econometrics}.
+%\bibitem{McCrackenNg2016} M.~McCracken and S. Ng (2016). FRED-MD: A Monthly Database for Macroeconomic Research. \textit{Journal of Business \& Economic Statistics}.
+\end{thebibliography}
+\end{frame}
+
+\end{document}

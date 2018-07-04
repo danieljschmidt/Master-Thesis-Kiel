@@ -1,0 +1,187 @@
+\documentclass[12pt,a4paper]{scrartcl}
+
+\usepackage[utf8]{inputenc}
+\usepackage[english]{babel}
+\usepackage{natbib}
+\usepackage{amsmath, amsthm, amssymb}
+
+\usepackage{hyperref}
+
+\setlength\parindent{0pt} % no indent
+
+\title{A bird's eye view on macroeconomic forecasting}
+% change title, very vague
+\author{Daniel Schmidt}
+
+\begin{document}
+	
+\maketitle
+
+In the following, I attempt to summarize the current state of the literature on macroeconomic forecasting. First, I describe the main challenges in producing good macroeconomic forecasts. Then, I discuss which methods have been developed in the literature to deal with these challenges. Finally, I consider (pseudo) out-of-sample forecasts and explain why it is difficult to come up with conclusive and robust results on which forecasting approach is best or which predictors are useful.\\
+
+I will later use this summary in order to motivate the particular research question of my thesis and explain how my results relate to the literature on macroeconomic forecasting.\\
+
+I focus on statistical models for forecasting and do not consider structural economic models like DSGE models. I do not only consider the (short-term) forecasts but also now-/backcasts.\\
+
+I will later use this short summary of the current state of the literature on macroeconomic forecasting in order to motivate the topic of my thesis.
+
+\subsection*{Why is macroeconomic forecasting important?}
+
+What explains the focus on GDP and inflation?
+
+\begin{itemize}
+	\item monetary policy (central banks): PCE inflation of 2\% (symmetric goal) and low unemployment \\ \url{https://www.federalreserve.gov/monetarypolicy/files/FOMC_LongerRunGoals.pdf}
+	\item fiscal policy (politicians how decide on government spending)
+	\item private sector (e.g. private banks)
+\end{itemize}
+
+\section{Challenges}
+
+Whenever a particular example is needed, we will consider a simple predictive regression of the type 
+\begin{align*}
+y_{t+h} = \beta x_t + \epsilon_t
+\end{align*}
+where $t$ is the forecast horizon and $x_t$ is a vector of potential predictors that is available at time $t$. (Depending on the sampling frequency of the variable that we are trying to forecast, $t$ is either measured in quarters or months.) Most considerations carry over to multiple-equation approaches such as VAR models that can generate iterated forecasts.\\
+
+The first challenge is that a large number of possible predictors is available: As a starting point consider the US macro data available in the FRED database. [several variables that measure similar things -> correlation, interest rates for different maturities, components of aggregate variables -> collinearity, which transformation, lags, some might not have any predictive power at a particular horizon]\\
+
+The second challenge is that the (optimal) parameters in a linear regression models may change over time - either because the true underlying data-generating process is nonlinear or because of changes in economic policy. [cite some literature in order to support the hypothesis that predictive relationships are not stable over time] Note that not only the slope parameters $\beta$ might change over time but also the variance of $\epsilon_t$ (primarily important for density forecasts).\\
+
+The third challenge is that some or all predictors are available at different (typically higher) frequencies than the target variable $y_t$. In that case, aggregation to the higher frequency leads to a loss of information. However, simply including the variables at a higher frequency into the linear regression further increases the number of parameters.\\
+
+The fourth challenge is posed by publication lags and revisions. The resulting structure of a vintage is referred to as the ``r/jagged edge of data". If a forecasting approach generates good predictions using the most recent vintage as data, this does not imply that its performance is similarly good in a real-time setting - especially if the key predictors are measured with long publication lags and/or are subject to major revisions. In a realistic forecasting exercise, one should therefore use a real-time dataset.\\
+
+I explicitly say that these properties of macroeconomic data are challenges and not problems since the larger number of potential of predictors that are measured is also a chance, as well as the data that is measured at a higher frequency.\\
+
+The last 20 years have brought many new developments to the academic literature on macroeconomic forecasting. For example,
+
+\begin{itemize}
+	\item The availability of real-time datasets has made it possible to evaluate the forecast performance of models that explicitly take into account the ragged-edge/publication lags, and so on. [Dean Croushore and Tom Stark] Related topic: nowcasting, where it is especially important to use real-time data
+	\item computation power is cheap today, new algorithms for estimating complicated models faster
+	\item machine learning methods to deal with the large number of potential predictors (however, time series!)
+\end{itemize}
+
+\section{Forecasting methods/ toolbox}
+
+Useful view on forecasting: right degree of flexibility and along the dimensions of the model where it matters. Ignoring nonlinear/ structural breaks/ time-varying parameters might be ok, if the (squared) bias introduced this way is smaller than the additional variance caused by the increase in the (effective) number of parameters/ degrees of freedom.\\
+
+iterated and direct forecasts\\
+
+Bayesian vs. classical/ frequentist estimation\\
+
+density vs point forecasts\\
+
+Approaches to deal with a large number of variables:
+\begin{itemize}
+	\item variable selection
+	\item shrinkage: This approach is motivated by the observation that simple benchmarks such as a random walk or an AR(1) are often hard to beat. Therefore, it is natural to shrink the parameter estimates towards such a simple model. Bayesian VARs are shrinkage implemented in a multiple-equation model using the Bayesian framework.
+	\item dimensionality reduction: This approach is motivated by the observation that a large fraction of the variance of most economic variables can be explained by a small number of hidden variables, so-called factors. Dynamic factor models are a generalization.
+	\item forecast combination/ averaging: In this approach, we do not attempt to estimate a large model with a many predictors but rather estimate several smaller models and calculate the weighted average of their forecasts. Weights might be calculated based on the past forecast performance but often a simple average is better than more sophisticated approaches. It is also possible to combine forecast densities.
+\end{itemize}
+
+Note that a fully Bayesian approach to variable selection includes averaging over several plausible models. Many shrinkage approaches are also able to performance variable selection (LASSO).
+
+Although the basic idea behind the approaches listed above are very different, they coexist in the literature on macroeconomic forecasting. De Mol et al. provide some arguments why Bayesian shrinkage and variable selection methods may perform similarly well as factor models. Gianonne et al. on the other hand, provide some empirical evidence that sparse modeling is not appropriate in (macro-)economic forecasting and refer to this phenomenon as the ``illusion of sparsity".\\
+
+Time-variation of parameters: Markov-switching, structural breaks, random walk in parameters (what about score-driven models?) A priori, it is not clear which of these three approaches is most appropriate. One recent approach [Wien] that seems to perform well in the presence of both a few, large changes and several, small changes.
+
+Again, a fully Bayesian approach typically offers model averaging for free while this is note the case for frequentist estimation.
+
+(factor) stochastic volatility for time-varying error variance important for good density forecasts\\
+
+solutions to mixed-frequency: state-space models vs. MIDAS vs. bridge equations \\
+
+\citet{BaiEtal2013} compares ADL/ multiplicative MIDAS regressions \citep{???} with state space models, both theoretically and empirically. The state space models which they consider are however not state-space VARs as in \citet{SchorfheideSong2015} but based on dynamic factor models. They find that, under certain conditions, the forecasts generated by both models are identical. They conclude that MIDAS regressions might be less efficient but are also less prone to misspecification and computationally simpler.\\
+
+solutions to ragged-edge: naturally in state-space models\\
+
+solutions to revisions??
+
+\section{Mixed-frequency VAR}
+
+\citet{SchorfheideSong2015} choose a state-space model to deal with mixed-frequency data and missing observations. They estimate their mixed-frequency VAR using a Minnesota-type prior and choose the hyperparameters such that the marginal likelihood is maximized. Samples are drawn from the posterior using Gibbs sampling and the Kalman filter. In a forecast experiment with real-time data with forecast origins placed at the end of each month and variables in log-levels (not stationary!), they find that there are substantial gains from using within-quarter information for nowcasting and short-horizon forecasting. (As a side note, they point out that the literature cannot agree whether to calculate forecast errors based on the first release or the most recent vintage. They use the most recent vintage.) They compare the forecast performance of the unrestricted version of the MIDAS model proposed in \citet{ForoniEtal2015} with that of bivariate mixed frequency VARs and find that both models use the within-quarter information similarly well.\\
+
+\begin{itemize}
+	\item How one should calculate forecast errors in the presence of revisions depends on nature of revisions (update based on new data vs. new procedure to calculate, say, real GDP, e.g. in 1999). I should use the version that makes more sense to me and maybe present the alternative version in the appendix.
+	\item Why not use sequential Monte Carlo instead of Gibbs sampling in combination with a Kalman filter step? (Only relevant if Gibbs sampling explores sample space too slowly.)
+	\item No proper comparison of mixed-frequency regression with the proposed mixed-frequency VAR: Why not allow for several regressors and use Bayesian shrinkage?
+	\item Is it important that variables are in log levels? What is the effect of nonstationary variables in Bayesian VARs and Bayesian (mixed-frequency) regressions?
+	\item The predictive ability of regressors might be time-varying.
+\end{itemize}
+
+\section{Excursus: Challenges in designing a convincing out-of-sample forecast experiment}
+
+In the literature on macroeconomic forecasting, there is only a small number of conclusions that most researchers would agree with. For example, it is in general very difficult to show in a convincing way that a specific forecasting approach is superior or that a particular time series is a reliable predictor for another target series.\\
+
+Small datasets in time dimension, and thus small sample for forecast evaluation, and difficult to beat simple benchmarks.\\
+
+Results of a (pseudo-) out-of-sample forecast experiment depend not only on the specific model (including details such as how to set tuning parameters) used and the predictors chosen (series + transformations) but also on the period that have been chosen for forecast evaluation and start of the estimation window (also rolling vs expanding) and so on. \\
+
+Taking a step back, it also depends on the country (external validity) and the target series.\\
+
+Main implications:
+\begin{itemize}
+	\item It is difficult to compare results among studies.
+	\item It is change the dataset and/or evaluation period and/or the transformations chosen such that the own model performs better than benchmark models without anyone noticing.
+\end{itemize}
+
+In the big data forecasting literature, a dataset has emerged [McCracken, Stock \& Watson].\\
+
+For models that cannot deal with the large dataset or if real-time data is needed, how can we proceed?\\
+
+What (second, third, final vintage) estimates do we use for forecast evaluation?\\
+
+What I will do:
+...
+
+\section{Financial variables as predictors}
+
+\subsection*{\citet{StockWatson2003} Survey article}
+
+\citet{StockWatson2003} review the literature on forecasting using financial variables and conduct an empirical analysis. 
+
+They perform a pseudo out-of-sample forecast experiment using a recursive estimation window. As target variables, they use output growth (measured by real GDP and industrial production) and inflation (measured by the consumer price index and the GDP deflator). As explanatory variables, they use a large dataset of (real and nominal) interest rates, term spreads, exchange rates and asset prices. Additionally, they also include some important non-financial variables in the dataset. (See table 1 for a description of their dataset.) All macroeconomic and financial variables are aggregated to quarterly frequency. The data is available from 1959 to 1999 and out-of-sample forecasts are generated for the periods 1971-84 and 1985-99. They use autoregressive distributed lag models of the type
+\begin{align*}
+Y^h_{t+h} = \beta_0 + \beta_1(L)X_t + \beta_2(L)Y_t + u^h_{t+h}
+\end{align*}
+to generate multi-step ahead forecasts and find out whether the indicator $X_t$ has predictive power for $Y_{t+h}$ (if the past values of the target variable are included in the regression). The article only presents results on 4-quarter-ahead forecasts but results for other forecast horizons are available in the web appendix. The analysis is not only conducted for US data but also using data from Canada, France, Germany, Italy, Japan and the UK.
+
+They find that some financial indicators have been useful predictors in some countries in some time periods. The authors stress the difficulty to exploit these indicators in a realistic forecast situation since these predictive relations are not stable. They suggest to use forecast combinations instead of forecasts based on individual predictors.\\
+
+Since \citet{StockWatson2003} has been published, there have been a number of important (and mutually related) developments in the forecasting literature that make it necessary to revisit the question if (and which) financial variables are useful in forecasting output and inflation:
+\begin{itemize}
+	\item nowcasting and mixed-frequency models (not done in \citet{StockWatson2003})
+	\item use real-time data in forecast experiments (not done in \citet{StockWatson2003})
+	\item more sophisticated methods to deal with large cross-section of series (beyond forecast combination) and parameter instability
+	\item better understanding of forecasting under instability (there is a consensus that their is parameter instability but difficult to model in a forecasting context) [cite Handbook chapter by Barbara Rossi] and development of suitable models: realized in \citet{StockWatson2003} but no suitable models
+	\item density forecasts, quantile forecasts (not done in \citet{StockWatson2003})
+\end{itemize}
+
+
+
+\citet{AndreouEtal2013} revisit the role of asset prices and focus especially on the nowcasting/mixed-frequency front and approach the problem of many predictors using dimensionality reduction techniques
+\begin{itemize}
+	\item not a comprehensive or conclusive answer to the question they attempted to answer, especially the ``how'' part
+	\item use data series that are available at monthly frequency but aggregate them quarterly? seems like cheating
+	\item I could investigate shrinkage and/or variable selection instead of dimensionality reduction and 
+	\item how to model time-varying predictive content? (structural breaks/ Markov-switching or time-varying parameters)
+	\item why not flat aggregation?
+	\item consider other countries (EU, Japan, UK) as well (external validity)
+\end{itemize}
+
+\citet{MonteforteMoretti2013} focus on inflation\\
+
+Somewhat related: forecast survey of professional forecasters
+
+\citet{Modugno2013} ??? Nowcasting inflation using high frequency data ?\\
+
+\citet{Galvao2013} and \citet{GuerinEtal2013} have proposed mixed-frequency models for instable predictive relations and demonstrated usefulness using financial variables.\\
+
+\section{Future of macroeconomic forecasting}
+
+change in data collection -> smaller lags? (online price data)
+
+\bibliographystyle{../myabbrvnat}
+\bibliography{macro-forecasting}
+
+\end{document}

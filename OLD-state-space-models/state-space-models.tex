@@ -1,0 +1,181 @@
+\documentclass[12pt,a4paper]{scrartcl}
+
+\usepackage[utf8]{inputenc}
+\usepackage[english]{babel}
+\usepackage{natbib}
+\usepackage{amsmath, amsthm, amssymb}
+
+\setlength\parindent{0pt} % no indent
+
+\title{State-space models}
+\author{Daniel Schmidt}
+
+\newcommand{\E}{\mathrm{E}}
+\newcommand{\Var}{\mathrm{Var}}
+
+\begin{document}
+	
+\maketitle
+
+\section{Introduction}
+
+A state space model is characterized by the initial density of the state $\mu_\theta(x)$, the Markov transition density $f_\theta(x'|x)$ and the density of an observation given the current state $g_\theta(y|x)$. The joint density of this model is given by
+\begin{align*}
+p_\theta(x_{1:T}, y_{1:T}) = \mu_\theta(x_1) \prod_{t=2}^{T}f_{\theta}(x_t|x_{t-1}) \prod_{t=1}^{T} g_{\theta}(y_t|x_t).
+\end{align*}
+In a more general setting the transition density and the density for generating the observations may depend on $t$.\\
+
+If the parameters $\theta$ are known, statistical inference is solely concerned with the latent states. Filtering refers to the task of estimating $p_\theta(x_{1:t}|y_{1:t})$ or $p_\theta(x_t|y_{1:t})$ recursively for $t=1,\dots T$. Smoothing refers to the task of estimating $p_\theta(x_{1:T}|y_{1:T})$ or $p_\theta(x_t|y_{1:T})$. 
+
+If the parameter vector $\theta$ is unknown, we are interested in the joint posterior density $p(\theta, x_{1:T}|y_{1:T})$. (In this review, I only consider Bayesian inference in state-space models.)
+
+\section{Linear Gaussian state-space models}
+
+A linear Gaussian state space model is described by
+\begin{align*}
+x_{t+1} &= A_t x_t + R_t v_t, \;\,\quad v_t \sim \mathrm{Normal}(0, V_t)\\
+y_t &= B_t x_t + w_t, \qquad w_t \sim \mathrm{Normal}(0, W_t)
+\end{align*}
+and $x_1 \sim \mathrm{Normal}(\mu_1, \Sigma_1)$. Examples for linear Gaussian state-space models are the local level model, a linear regression with time-varying parameters, a mixed-frequency VAR and dynamic factor models.
+
+%In contrast to \citet{DurbinKoopman2012}, I do not include a selection matrix $R_t$ in the equation for $y_t$.
+
+\subsection{Kalman filter and smoother}
+
+If the state-space model is linear and the error terms $v_t$ and $w_t$ are normally distributed, $x_t|y_{1:t}$, $x_{t+1}|y_{1:t}$ and $x_t|y_{1:T}$ are normally distributed as well:
+\begin{align*}
+x_t|y_{1:t} &\sim \mathrm{Normal}(\mu_{t|t}, \Sigma_{t|t}) \\
+x_{t+1}|y_{1:t} &\sim \mathrm{Normal}(\mu_{t+1|t}, \Sigma_{t+1|t}) \\
+x_t|y_{1:T} &\sim \mathrm{Normal}(\mu_{t|T}, \Sigma_{t|T})
+\end{align*}
+
+The Kalman filter recursions for obtaining $p(x_t|y_{1:t})$ and $p(x_{t+1}|y_{1:t})$ recursively are
+\begin{align*}
+\mu_{t|t} &= \mu_{t|t-1} + \Sigma_{t|t-1}B_t'F_t^{-1}\Delta y_t\\
+\mu_{t+1|t} &= A_t\mu_{t|t}\\
+\Sigma_{t|t} &= \Sigma_{t|t-1} - \Sigma_{t|t-1}B_t'F_t^{-1}B_t\Sigma_{t|t-1}\\
+\Sigma_{t+1|t} &= A_t\Sigma_{t|t}A_t' + R_t V_t R_t'
+\end{align*}
+where $\Delta y_t = y_t - B_t x_t$ and $F_t = B_t\Sigma_{t|t-1}B_t' + W_t$. Leaving out the intermediate step of computing $\mu_{t|t}$ and $\Sigma_{t|t}$, the Kalman filter equations reduce to
+\begin{align*}
+\mu_{t+1|t} &= A_t\mu_{t|t-1} + K_t\Delta y_t \\
+\Sigma_{t+1|t} &= A_t \Sigma_{t|t-1}(A_t - K_t B_t)' + R_t V_t R_t'
+\end{align*}
+where $K_t$ denotes the Kalman gain $K_t=A_t\Sigma_{t|t-1}B_t'F_t^{-1}$. Moreover, note that the Kalman filter recursions for $\Sigma_{t|t-1}$ converge to a constant matrix if $A_t$, $B_t$, $V_t$ and $W_t$ are constant.\\
+
+By combining the Kalman filter recursions above with the state smoothing recursions
+\begin{align*}
+r_{t-1} &= B_t'F_t^{-1}\Delta y_t + L_t'r_t \\
+\mu_{t|T} &= \mu_{t|t-1} + \Sigma_{t|t-1}r_{t-1} \\
+N_{t-1} &= B_t'F_t^{-1}B_t + L_t' N_t L_t \\
+\Sigma_{t|T} &= \Sigma_{t|t-1} - \Sigma_{t|t-1}N_{t-1}\Sigma_{t|t-1}
+\end{align*}
+for $t=T, \dots 1$ initialized with $r_T = 0$ and $N_T=0$, we obtain mean and variance of $x_t|y_{1:T}$. $L_t$ is defined as $L_t = A_t - K_t B_t$.\\
+
+The disturbance smoothing recursion is
+\begin{align*}
+\E(w_t|y_{1:T})   &= W_t (F_t^{-1} \Delta y_t - K_t' r_t)\\
+\E(v_t|y_{1:T})   &= V_t R_t' r_t\\
+\Var(w_t|y_{1:T}) &= W_t - W_t(F_t^{-1} + K_t'N_t K_t)\\
+\Var(v_t|y_{1:T}) &= W_t - W_t R_t' N_t R_t W_t\\
+\end{align*}
+
+=> Fast state smoothing!! (Koopman 1993), especially useful if $\Sigma_{t+1|t}$ is not needed
+
+\subsection{Simulation smoother}
+
+
+For $v_{1:T}$ and $w_{1:T}$:
+
+\begin{itemize}
+	\item run the disturbance smoothing algorithm to obtain $\hat{v} = \E(v_{1:T}|y_{1:T})$ and $\hat{w}=\E(w_{1:T}|y_{1:T})$
+	\item draw $v_t^+ \sim \mathrm{Normal}(0, V_t)$ and  $w_t^+ \sim \mathrm{Normal}(0, W_t)$ (in the following $v^+ = [v_1^+; v_2^+; \dots v_T^+] $ and analogous for $w^+$)
+	\item simulate $y^+$ for $v^+$ and $w^+$
+	\item run the disturbance smoothing algorithm again for $y^+$ to obtain $\hat{v}^+ = \E(v_{1:T}|y^+_{1:T})$ and $\hat{w}^+ =\E(w_{1:T}|y^+_{1:T})$
+	\item $\tilde{v} = v^+ - \hat{v}^+ + \hat{v}$
+	\item $\tilde{w} = w^+ - \hat{w}^+ + \hat{w}$
+	\item $\tilde{v}, \tilde{w} \sim p(v, w|y_{1:T})$
+\end{itemize}
+
+For $x_{1:T}$:
+
+\begin{itemize}
+	\item run the fast state smoothing algorithm to obtain $\hat{x} = \E(x_{1:T}|y_{1:T})$
+	\item simulate $y^+$ and $x^+$ for $v^+$, $w^+$ and $x_1^+$
+	\item run the fast state smoothing algorithm again for $y^+$ to obtain $\hat{x}^+ = \E(x_{1:T}|y^+_{1:T})$
+	\item $\tilde{x} = x^+ - \hat{x}^+ + \hat{x} \sim p(x|y_{1:T})$
+\end{itemize}
+
+check the correction by ??? (ECB working paper)
+
+\subsection{Forecasting, missing values?}
+
+\subsection{Bayesian inference in linear Gaussian state-space models}
+
+We are interested in sampling from $p(x_{1:T}, \theta | y_{1:T})$. This is possible by using the Gibbs sampling scheme
+
+\begin{itemize}
+	\item draw $x_{1:T}^{(i)} \sim p(x_{1:T} | y_{1:T}, \theta^{(i-1)})$ using simulation smoothing
+	\item draw $\theta^{(i)} \sim p(\theta | y_{1:T}, x_{1:T}^{(i)})$ using a model-specific algorithm
+\end{itemize}
+
+for some starting values $\theta^{(0)}$.
+
+\section{Particle methods for general state-space models}
+
+examples: stochastic volatility
+
+\subsection{Particle filters}
+
+The bootstrap filter \citep{GordonEtal1993}
+
+The auxiliary particle filter \citep{PittShephard1999}
+
+Note that the bootstrap filter is a special case of the auxiliary particle filter.
+
+\subsection{Particle MCMC \citep{AndrieuEtal2010}}
+
+Particle independent Metropolis-Hastings sampler
+
+Particle marginal Metropolis-Hastings sampler
+
+Particle Gibbs sampling
+
+\appendix 
+
+\section{Proofs: Kalman filter and smoother}
+
+\subsection{Kalman filter}
+
+As a starting point I use 
+\begin{align*}
+p_\theta(x_t, y_t|y_{1:t-1}) 
+&= g_\theta(y_t|x_t) p_\theta(x_t|y_{1:t-1})\\
+&= p_\theta(x_t|y_{1:t}) p_\theta(y_t|y_{t-1})
+\end{align*}
+which implies
+\begin{align*}
+p(x_t|y_{1:t}) 
+&\propto g_\theta(y_t|x_t) p_\theta(x_t|y_{1:t-1}) \\
+&\propto \exp\left(-\frac{1}{2}\left[(y_t-B_t x_t)'W_t^{-1}(y_t-B_t x_t) + (x_t-\mu_t)'\Sigma_{t}^{-1}(x_t-\mu_t)\right]\right).
+\end{align*}
+I am only interested in the kernel of $p(x_t|y_{1:t})$ and therefore ignore all multiplicative terms that do not depend on $x_t$. (For notational simplicity, I write $\mu_t$ instead of $\mu_{t|t-1}$, $\Sigma_t$ instead of $\Sigma_{t|t-1}$ and do not explicitly denote $g_\theta(\cdot)$ as time-varying.) It turns out that this is the kernel of a Normal distribution
+\begin{align*}
+p(x_t|y_{1:t})&\propto \exp\left(-\frac{1}{2}(x_t-\mu_{t|t})'\Sigma_{t|t}^{-1}(x_t-\mu_{t|t})\right).
+\end{align*}
+Comparing terms yields
+\begin{align*}
+\Sigma_{t|t}^{-1} &= B_t'W_t^{-1}B_t + \Sigma_t^{-1}\\
+\mu_{t|t} &= \Sigma_{t|t}(B_t W_t^{-1} y_t + \Sigma_t^{-1}\mu_t).
+\end{align*}
+As a final step, I apply Woodbury's formula
+\begin{align*}
+(A + UCV)^{-1} = A^{-1} - A^{-1} U (C^{-1} + V A^{-1} U)^{-1} V A^{-1} 
+\end{align*} %TODO why computationally more efficient
+in order to obtain an expression for $\Sigma_{t|t}$ from $\Sigma_{t|t}^{-1}$.
+
+\bibliographystyle{../myabbrvnat}
+\bibliography{state-space-models}
+
+
+\end{document}

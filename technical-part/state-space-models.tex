@@ -1,0 +1,77 @@
+\documentclass[12pt,a4paper]{scrartcl}
+
+\usepackage[utf8]{inputenc}
+\usepackage[english]{babel}
+\usepackage{natbib}
+\usepackage{amsmath, amsthm, amssymb}
+
+\setlength\parindent{0pt} % no indent
+
+\title{Technical fragments for master's thesis}
+\author{Daniel Schmidt}
+
+\newcommand{\E}{\mathrm{E}}
+\newcommand{\Var}{\mathrm{Var}}
+
+\begin{document}
+	
+\maketitle
+
+\section{Linear gaussian state space model}
+
+\begin{align*}
+x_{t+1} &= A x_t + R_\epsilon \epsilon_t \\
+y^*_t   &= \mu + B x_t + R_\eta \eta_t \\
+y_t     &= S_t y_t 
+\end{align*}
+where $S_t$, $R_\epsilon$ and $R_\eta$ are selection matrices and $x_1 \sim \mathrm{Normal}(\mu_1, \Sigma_1)$, $\epsilon_t \sim \mathrm{Normal}(0, \Sigma_\epsilon)$ and $\eta_t \sim \mathrm{Normal}(0, \Sigma_\eta)$.
+
+\subsection{Fast state smoothing and simulation smoother}
+
+The \textbf{fast state space smoothing algorithm} \citep{bibid} is an efficient way to find $\mu_{t|T} = \E[x_t|y_{1:T}]$:
+
+\begin{align*}
+V &= R_\epsilon \Sigma_\epsilon R_\epsilon' \\
+W &= R_\eta \Sigma_\eta R_\eta'
+\end{align*}
+
+For $t=1:T$ perform the recursion:
+\begin{align*}
+\Delta y_t &= y_t - S_t(\mu + B x_t) \\
+F_t &= B_t \Sigma_{t|t-1} B_t' + S_t W_t S_t' \\
+M_t &= B_t' F_t^{-1} \\
+K_t &= A \Sigma_{t|t-1} M_t \\
+L_t &= A - K_t B_t \\
+q_t &= M_t \Delta y_t \\
+\mu_{t+1|t} &= A \mu_{t|t-1} + K_t \Delta y_t \\
+\Sigma_{t+1|t} &= A \Sigma_{t|t-1} L_t' + V 
+\end{align*}
+Only $q_T$ and $L_t$ need to be saved.
+
+Then, define $r_T=0$ and do for $t=T:-1:1$
+\begin{align*}
+r_{t-1} = q_t + L_t' r_t
+\end{align*}
+
+Finally, define $x_{1|T}=\mu_1 + \Sigma_1 r_0$ and do for $t=2:T$
+\begin{align*}
+\mu_{t+1|T} = A \mu_{t|T} + V r_t
+\end{align*}
+
+The \textbf{simulation smoother algorithm} \citep{bibid} is an efficient way to sample from $p(x_{1:T}|\theta, y_{1:T})$:
+\begin{itemize}
+	\item apply the fast state smoothing algorithm to $y_t$ to obtain $\mu_{1:T|T}$
+	\item draw $(\tilde{x}_{1:T}, \tilde{y}_{1:T})$ from the state space model
+	\item apply the fast state smoothing algorithm to $\tilde{y}_t$ to obtain $\tilde{\mu}_{1:T|T}$
+	\item $\tilde{x}_{1:T} - \tilde{\mu}_{1:T|T} + x_{1:T} \sim p(x_{1:T}|y_{1:T})$
+\end{itemize}
+
+\subsection{Precision-based algorithms}
+
+There is a problem with \textsf{BandedMatrices.jl}. However, the precision-based algorithm for a local level model and the stochastic volatility model works nicely in Python.
+
+%\bibliographystyle{../myabbrvnat}
+%\bibliography{state-space-models}
+
+
+\end{document}

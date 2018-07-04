@@ -1,0 +1,150 @@
+\documentclass[12pt,a4paper]{scrartcl}
+
+\usepackage[utf8]{inputenc}
+\usepackage[english]{babel}
+\usepackage{natbib}
+\usepackage{amsmath, amsthm, amssymb}
+
+\usepackage{hyperref}
+
+\setlength\parindent{0pt} % no indent
+
+\title{Fragments for master's thesis}
+\author{Daniel Schmidt}
+
+\begin{document}
+	
+\maketitle
+
+\section{Literature review}
+
+\textbf{\citet{MarianoMurasawa2003}} construct a coincident business cycle indicator using the following factor model
+\begin{align}
+y_{i,t} &= \mu_i + \beta_i f_t + u_{i,t} \\
+f_t &= \phi_1 f_{t-1} + \dots \phi_p f_{t-p} + v_t \\
+u_{i,t} &= \psi_{i1} u_{i,t-1} + \dots \psi_{iq} u_{i,t-q} + w_{i,t}
+\end{align}
+where $y_t$ is a vector of monthly series and $f_t$ is a single factor. The errors $v_{t}$ and $w_{i,t}$ are normally distributed with mean zero and are uncorrelated with each other. Quarterly variables can be modeled by viewing $y_{i,t}$ as their unobserved monthly counterpart. If $a^*_t$ is a quarterly growth rate, one can show that it relates to monthly growth rates $a_t$ as $a^*_t \approx \frac{1}{3}a_t + \frac{2}{3}a_{t-1} + a_{t-2} + \frac{2}{3}a_{t-3} + \frac{1}{3}a_{t-4}$. The model equations and the equation that relates monthly GDP growth to quarterly GDP growth can be written in state space form with the state space vector $x_t=[f_{t:t-r}, u_{1,t:t-r}, u_{2,t:t-q}, \dots, u_{n,t:t-q}]$ where $r = \mathrm{max}\{4, q\}$ and I assumed $y_{1,t}$ to be a quarterly variable and $y_{2:n,t}$ to denote monthly variables.\\
+
+\textbf{Proof of $x_t^q = \frac{1}{3} x_t^m + \frac{2}{3} x_{t-1}^m + x_{t-2}^m + \frac{2}{3} x_{t-3}^m + \frac{1}{3} x_{t-4}^m$}
+
+Let $X^q_t$ be GDP in the quarter that ends in month $t$ and let $X^m_t$ denote GDP in month $t$. Then quarterly GDP is the sum of GDP in the last 3 months: $X^q_t = X^m_t + X^m_{t-1} + X^m_{t-2}$. The quarter-on-quarter GDP growth is
+\begin{align}
+x^q_t &= \log X^q_t - \log X^q_{t-3} 
+= \log(1 + \frac{X^q_t-X^q_{t-3}}{X^q_{t-3}}) 
+\approx \frac{X^q_t-X^q_{t-3}}{X^q_{t-3}}
+\end{align}
+By replacing quarterly GDP $X^q_t$ with the sum of monthly GDP values, we obtain
+\begin{align}
+x^q_t \approx \frac{X^m_t + X^m_{t-1} + X^m_{t-2} - X^m_{t-3} - X^m_{t-4} - X^m_{t-5}}{X^m_{t-3} + X^m_{t-4} + X^m_{t-5}}
+\end{align}
+Now comes the more interesting part. First, we divide both numerator and denominator by $X^m_{t-5}$:
+\begin{align}
+x^q_t &\approx \frac{X^m_t/X^m_{t-5} + X^m_{t-1}/X^m_{t-5} + X^m_{t-2}/X^m_{t-5} - X^m_{t-3}/X^m_{t-5} - X^m_{t-4}/X^m_{t-5} - 1}{X^m_{t-3}/X^m_{t-5} + X^m_{t-4}/X^m_{t-5} + 1}
+\end{align}
+As a next step, we rewrite the fractions $X_t^m/X_{t-5}^m$, $X_{t-1}^m/X_{t-5}^m$, \dots in terms of monthly growth rates. Repeatedly applying $X_t^m \approx X_{t-1}^m(1+x_{t}^m)$ yields
+\begin{align}
+X_{t-4}^m/X_{t-5}^m &\approx (1+x_{t-4}^m) \\
+X_{t-3}^m/X_{t-5}^m &\approx (1+x_{t-4}^m)(1+x_{t-3}^m) \\
+&\approx 1 + x_{t-4}^m + x_{t-3}^m \\
+\vdots &  \\
+X_t^m/X_{t-5}^m &\approx (1+x_{t-4}^m)(1+x_{t-3}^m)(1+x_{t-2}^m)(1+x_{t-1}^m)(1+x_t^m) \\
+&\approx 1 + x_{t-4}^m + x_{t-3}^m + x_{t-2}^m + x_{t-1}^m + x_t^m
+\end{align}
+where the linear approximations hold since products of two or more growth rates are typically very small. We finally obtain
+\begin{align}
+x_t^q &\approx \frac{x_t^m + 2x_{t-1}^m + 3x_{t-2}^m + 2x_{t-3}^m + x_{t-4}^m}{3 + 2 x_{t-4}^m + x_{t-3}^m} \\
+&\approx \frac{1}{3} x_t^m + \frac{2}{3} x_{t-1}^m + x_{t-2}^m + \frac{2}{3} x_{t-3}^m + \frac{1}{3} x_{t-4}^m
+\end{align}
+Alternatively, take 
+\begin{align}
+x^q_t = \log\left(\frac{X^m_t + X^m_{t-1} + X^m_{t-2}}{X^m_{t-3} + X^m_{t-4} + X^m_{t-5}}\right)
+\end{align}
+as a starting point, write $X^m_t, \dots X^m_{t-5}$ in terms of $X^m_{t-5}$ and growth rates 
+\begin{align}
+x^q_t \approx \log\left(\frac{3 + 3x^m_{t-4} + 3x^m_{t-3} + 3x^m_{t-2} + 2x^m_{t-2} +x^m_t}{3 + 2x^m_{t-4} + x^m_{t-3}}\right)
+\end{align}
+and calculate a Taylor approximation around $(x^m_t, \dots x^m_{t-4}) = 0$.\\
+
+%In my master's thesis, I should put this derivation in the appendix and write sth like that this proof is not easily comprehensible in \citet{MarianoMurasawa2003}. Demonstrate that the approximation error is small either with industrial production. (It is not possible to use the monthly GDP measure calculated from the DFM to this end.)
+%\\
+
+\textbf{\citet{MarcellinoEtal2016}} use a variation of \citet{MarianoMurasawa2003}'s factor model for short-term Euro area GDP forecasts (backcasts, nowcasts and 1-step-ahead forecasts). The main modification is the introduction of stochastic volatility in the errors $v_t$ and $w_{i,t}$
+\begin{align}
+\log \sigma_{v,t}^2   &= \log \sigma_{v,t-1}^2 + \eta_{v, t} \\
+\log \sigma_{w_i,t}^2 &= \log \sigma_{w_i,t-1}^2 + \eta_{w_i, t}.
+\end{align}
+In order to identify the scale of the factors and the factor loadings, the restriction $\sigma_{v,1}^2 = 1$ needs to be imposed (???). Furthermore, \citet{MarcellinoEtal2016} model monthly survey indicators as
+\begin{align}
+y_{i,t} = \mu_i + \beta_i \sum_{j=0}^{11} f_{t-j} + u_i,t
+\end{align}
+since surveys typically refer to year-on-year growth rates (???). They use a Gibbs sampler to generate draws from the posterior density of the model parameters. In the empirical application, the $8$ monthly series $y_{i,t}$ are chosen from a larger set of indicators by starting with a set of four core monthly indicators and then applying an iterative forward selection procedure until some stopping criterion is satisfied. They report that they have experimented with two factors but claim that the ``second factor turned out not to be well identified, as all the estimated loadings were not different from zero'':
+
+Weaknesses: pre-selection (arbitrary, not Bayesian, conducted once with the full sample or the estimation sample, should rather be done in every estimation period again), two factors (why this special specification, ``no identification'' contradicts ``loadings are zero''), combination of pre-selection and two factors (only formulated in case of two factors)
+\\
+
+In the literature, dynamic factor models typically have a form different from the one described above: In most articles, the dependent variables are also allowed to load on lags of the factor. \citet{BaiWang2015} features a careful discussion of the different sources of dynamics in factor models.
+
+\section{Bayesian inference in dynamic factor models}
+
+\subsection{Useful results}
+
+\subsubsection*{Gibbs sampler for linear regression with independent Normal-Gamma prior}
+
+The independent Normal-Gamma prior is
+\begin{align}
+p(\beta, \sigma^2) = p(\beta) \cdot p(\sigma^2)
+\end{align}
+where 
+\begin{align}
+p(\beta) &\propto \exp\left(-\frac{1}{2}(\beta-\underline{\beta})'\underline{\Sigma}_\beta^{-1}(\beta-\underline{\beta})\right) \\
+p(\sigma^2) &\propto (\sigma^2)^{-\underline{a} - 1} \exp\left(-\frac{\underline{b}}{\sigma^2}\right).
+\end{align}
+The likelihood has the form
+\begin{align}
+p(y|\beta, \sigma^2) \propto \exp\left(-\frac{1}{2\sigma^2}(y-X\beta)'(y-X\beta)\right)
+\end{align}
+and therefore the conditional posterior distributions for the Gibbs sampler are proportional to
+\begin{align}
+p(\beta|y, \sigma^2) &\propto \exp\left(-\frac{1}{2}\left(\beta'(\sigma^{-2}X'X + \underline{\Sigma}_\beta^{-1})\beta - 2\beta'(\sigma^{-2}X'y + \underline{\Sigma}_\beta^{-1}\underline{\beta})\right)\right)\\
+p(\sigma^2|y, \beta) &\propto (\sigma^2)^{-T/2-\underline{a} - 1} \exp\left(-\frac{1}{2\sigma^2}(y-X\beta)'(y-X\beta)-\frac{\underline{b}}{\sigma^2}\right).\\
+\end{align}
+Therefore the Gibbs sampler is
+\begin{align}
+\beta|y, \sigma^2 \sim \mathrm{Normal}(\overline{\beta}, \overline{\Sigma}_\beta)
+\end{align}
+with
+\begin{align}
+\overline{\Sigma}_\beta^{-1} &= \sigma^{-2}X'X + \underline{\Sigma}_\beta^{-1}\\
+\overline{\Sigma}_\beta^{-1} \overline{\beta} &= \sigma^{-2}X'y + \underline{\Sigma}_\beta^{-1}\underline{\beta}
+\end{align}
+and
+\begin{align}
+\sigma^2 \sim \mathrm{InvGamma}(\overline{a}, \overline{b})
+\end{align}
+with $\overline{a} = T/2 + \underline{a}$ and $\overline{b} = u'u/2 + \underline{b}$.
+% TODO Gamma prior on \sigma^{-2}
+
+\subsubsection*{Posterior for $\beta$ in SUR model with Normal prior}
+
+The model is $y_t = B' x_t + u_t$. Stacking the transposed equations yields $Y = XB + U$ and vectorized this equation yields $y = (I_k \otimes X) \beta + u$. The likelihood has the form
+\begin{align}
+p(y|\beta, \Sigma) 
+&\propto |\Sigma|^{-T/2} \exp\left(-\frac{1}{2} \sum_t (y_t - B' x_t)'\Sigma^{-1}(y_t - B'x_t)\right)\\
+&\propto |\Sigma|^{-T/2} \exp\left(-\frac{1}{2}(y-(I_k\otimes X)\beta)'(\Sigma^{-1}\otimes I_T)(y-(I_k\otimes X)\beta)\right).
+\end{align}
+The posterior distribution for $\beta$ conditional on $\sigma^2$ is
+\begin{align}
+\beta|y, \sigma^2 \sim \mathrm{Normal}(\overline{\beta}, \overline{\Sigma}_\beta)
+\end{align}
+with
+\begin{align}
+\overline{\Sigma}_\beta &= \Sigma^{-1} \otimes X'X + \underline{\Sigma}_\beta \\
+\overline{\Sigma}_\beta^{-1}\overline{\beta} &= (\Sigma^{-1} \otimes X')y + \underline{\Sigma}_\beta^{-1} \underline{\beta}.
+\end{align}
+The posterior for $\Sigma$ conditional on $\beta$ is not needed in the context of dynamic factor models.
+
+\bibliographystyle{../myabbrvnat}
+\bibliography{macro-forecasting,dynamic-factor-models}
+
+\end{document}

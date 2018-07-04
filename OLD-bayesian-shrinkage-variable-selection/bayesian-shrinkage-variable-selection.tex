@@ -1,0 +1,51 @@
+\documentclass[12pt,a4paper]{scrartcl}
+
+\usepackage[utf8]{inputenc}
+\usepackage[english]{babel}
+\usepackage{natbib}
+\usepackage{amsmath, amsthm, amssymb}
+
+\setlength\parindent{0pt} % no indent
+
+\title{Bayesian shrinkage and variable selection}
+% change title, very vague
+\author{Daniel Schmidt}
+
+\begin{document}
+	
+\maketitle
+
+A (somewhat outdated) review of Bayesian variable selection methods can be found in \citet{OHaraSillanpaa2009}. Both stochastic search variable selection, adaptive shrinkage (Laplace prior) and Reversible Jump MCMC are discussed.\\
+
+There are many new theoretical results in the literature that I do not understand fully yet: For example, \citet{CastilloEtal2015} show that the posterior contraction rate is optimal for sparse priors. They also provide a short review of computational methods. \citet{YangEtal2016}, on the other side, find conditions under which there is rapid mixing of MCMC algorithms.
+
+\section{Global-local/ adaptive shrinkage priors}
+
+Global-local shrinkage priors have the form
+\begin{align*}
+\beta_i|\sigma^2_i \sim&\;\mathcal{N}(0, \sigma^2_i) \\
+\sigma_i^2 \sim&\;\mathcal{D}
+\end{align*}
+where $\mathcal{D}$ is some continuous probability distribution. %\footnote{
+%	In the special case where $\mathcal{D}$ is discrete and takes only two values, we recover the stochastic search variable selection (SSVS) prior.
+%} 
+The mean of $\mathcal{D}$ determines the global shrinkage intensity, whereas the parameters $\sigma_i^2$ govern the local shrinkage intensities for particular parameters $\beta_i$. Global-local shrinkage priors are also referred to as adaptive or hierarchical shrinkage priors.\\
+
+Priors of this shape are particularly attractive because they approximate spike-and-slab priors but tend to be computationally more efficient. [?]\\
+
+A popular choice for $\mathcal{D}$ is the Gamma distribution \citep{GriffinBrown2010}. In contrast to a Normal prior with a global shrinkage intensity for all $\beta_i$, the Normal-Gamma prior is more concentrated around $0$ and has fatter tails. Loosely speaking, it selects a few important coefficients that are allowed to take large values and shrinks all other coefficients strongly towards zero.  Alternative adaptive shrinkage priors with better properties in the presence of sparsity \citep{CarvalhoEtal2010} or in the presence of some group structure \citep{LiLin2010} have been proposed in the statistics literature.\\
+
+Due to their structure, Gibbs sampling is always possible if a Gaussian scale mixture prior as described above is applied to a (Gaussian) linear regression problem. \citet{BhattacharyaEtal2016} proposes an alternative algorithm for sampling from the posterior that is considerably faster if the number of parameters is much larger than the number of observations. \citet{HahnEtal2018} develop a general method for sampling for Gaussian linear regression models with arbitrary priors such that it is not necessary to write a custom Gibbs sampling algorithm.
+
+\subsection*{Applications in economic forecasting}
+
+The first applications in econometrics are sparse dynamic regression models for forecasting, with either constant \citep{Korobilis2013} or time-varying coefficients \citep{KalliGriffin2014, BelmonteEtal2014}. \citet{Gefang2014}, \citet{HuberFeldkircher2017} and \citet{KorobilisPettenuzzo2017} consider Bayesian VARs with global-local shrinkage priors where the last two do not only conduct forecast experiments but also consider possible applications in structural analysis. \citet{HuberEtal2016} and \citet{FeldkircherEtal2017} use adaptive shrinkage in time-varying parameter VAR models.
+
+\section{Spike-and-Slab Lasso}
+
+In \citet{RockovaGeorge2016} and \citet{Rockova2018}, the so-called spike-and-slab Lasso has been proposed as a method for variable selection. It is basically a two-point mixture of two Laplace distributions. \citet{RockovaMcAlinn2017} extend the method such that it can also be applied to dynamic variable selection. They conduct a forecasting experiment (using the McCracken dataset) with CPI inflation as the target variable.
+
+\bibliographystyle{../myabbrvnat}
+\bibliography{bayesian-shrinkage-variable-selection}
+
+\end{document}
