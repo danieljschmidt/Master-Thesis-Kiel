@@ -13,7 +13,7 @@
 %\usepackage{algorithm}
 %\usepackage{algpseudocode}
 
-%\usepackage{graphicx}
+\usepackage{graphicx}
 %\usepackage{tabularx}
 
 %\usepackage{etoolbox}
@@ -24,7 +24,7 @@
 
 %\DeclareMathOperator{\diag}{diag}
 
-\title{Forecasting with Bayesian mixed-frequency factor models}
+\title{Real-time forecasting with Bayesian mixed-frequency models}
 %\subtitle{Seminar in Econometrics: Forecasting in a data-rich environment}
 \author{Daniel Schmidt}
 \date{August ??, 2018}
@@ -35,11 +35,47 @@
 
 \maketitle
 
-\input{1-intro.tex}
+\input{0-Abstract}
 
-% Erklärung, dass ich die Masterarbeit selbst verfasst habe
+\tableofcontents
+
+\input{1-Introduction}
+% 5 Seiten
+
+\input{2-Dynamic-Factor-Models}
+% 10 Seiten?
+% first dfms, then mixed-frequency dfms, then stochastic volatility?
+% identification
+% sparse prior on lambda
+% discuss computational advantages
+
+% simulation study ?!
+
+\input{3-Bayesian-Estimation}
+
+\input{4-Forecast-Experiment}
+% 10 Seiten?
+% careful discussion of variable selection, decisions wrt estimation and evaluation period, benchmark model
+% evaluation of mcmc output (literature review)
+
+\input{5-Conclusion}
+% max 2 Seiten
 
 \bibliographystyle{myabbrvnat}
-\bibliography{mixed-frequency}
+\bibliography{literature}
+% additional references section for appendix??
+
+\clearpage
+
+\appendix
+
+\input{Appendix-Gibbs}
+\input{Appendix-Mariano-Murasawa}
+\input{Appendix-State-Space}
+\input{Appendix-Arp}
+\input{Appendix-Code-Manual}
+% in the appendix: code manual, make clear what I have used from different sources
+
+\input{Last-Page.tex}
 
 \end{document}

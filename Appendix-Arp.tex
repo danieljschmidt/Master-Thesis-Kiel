@@ -1,0 +1,77 @@
+
+\chapter{Bayesian inference in AR($p$) models}
+
+\begin{align}
+y_t &= \mu + u_t \\
+u_t &= \phi u_{t-1} + e_t \\
+e_t &\sim \mathrm{Normal}(0, \sigma^2)
+\end{align}
+
+\begin{align}
+p(y_{1:T}|\theta) &= p_\theta(y_{1:p}) \prod_{t=p+1:T} p_\theta(y_t|y_{t-(1:p)}) \\
+&= \frac{1}{\sqrt{(2\pi)^p\sigma^{2p}|\Sigma_{1:p}|}} \exp\left(-\frac{1}{2\sigma^2}(\phi(L)u_t)^2\right)  \prod_{t=p+1:T} \frac{1}{\sqrt{2\pi\sigma^2}} \exp\left(\frac{1}{2\sigma^2}u_{1:p}'\Sigma_{1:p}^{-1}u_{1:p}\right)
+\end{align}
+
+\begin{align}
+\Sigma_{1:p} &= \Phi \Sigma_{1:p} \Phi' + [1, 0, \dots 0]' [1, 0, \dots 0] \\
+\mathrm{vec}(\Sigma_{1:p}) &= (I_{p^2} -\Phi \otimes \Phi)^{-1} \mathrm{vec}([1, 0, \dots 0]' [1, 0, \dots 0])
+\end{align}
+
+the prior has the structure
+
+\begin{align}
+p(\theta) = p(\mu)p(\phi)p(\sigma^2)
+\end{align}
+
+\textbf{sampling $\sigma^2$}
+
+prior $p(\sigma^2) \propto 1/\sigma$
+
+\begin{align}
+p(\sigma^2|\cdot) &\propto p(y_{1:T}|\theta) p(\sigma^2) \\
+&\propto (\sigma^{-2})^{T/2+1/2} \exp\left(-\frac{1}{2\sigma^2}\tilde{u}_{1:T}'\tilde{u}_{1:T}\right)
+\end{align}
+with
+\begin{align}
+\tilde{u}_{1:p} &= L^{-1} u_{1:p} \\
+\tilde{u}_{p+1:T} &= \phi(L) u_{p+1:T}
+\end{align}
+where $L$ is the lower Cholesky factor of $\Sigma_{1:p}$
+
+\begin{align}
+\sigma^2|y_{1:T}, \theta_{-\sigma^2} \sim \mathrm{InvGamma}\left(\frac{T}{2}, \frac{2}{\tilde{u}_{1:T}'\tilde{u}_{1:T}}\right)
+\end{align}
+
+\textbf{sampling $\mu$}
+
+prior $p(\mu) \propto 1$
+
+\begin{align}
+p(\mu|\cdot) &\propto p(y_{1:T}|\theta) p(\mu) \\
+&\propto \exp\left(-\frac{1}{2\sigma^2}\left[\sum_{t=p+1:T}(\phi(L)y_t - \phi(1)\mu)^2 + (y_{1:p}-\mu)'\Sigma_{1:p}^{-1}(y_{1:p}-\mu)\right]\right)
+\end{align}
+
+\begin{align}
+\mu_\mu &= \sigma^2_\mu \left(\phi(1)\sum_{t=p+1:T}\phi(L)y_t + 1' \Sigma_{1:p}^{-1}y_{1:p}\right) \\
+\sigma^2_\mu &= \frac{\sigma^2}{(T-p)\phi(1)^2 + 1'\Sigma_{1:p}^{-1}1} \\
+\mu|\cdot &\sim \mathrm{Normal}(\mu_\mu, \sigma^2_\mu)
+\end{align}
+
+\textbf{sampling $\phi$}
+
+prior $p(\phi) \propto \mathrm{Normal}(\underline{\phi}, \underline{\Sigma}_\phi)$
+
+\begin{align}
+p(\phi|\cdot) &\propto |\Sigma_{1:p}|^{-1/2} \exp\left(-\frac{1}{2\sigma^2}u_{1:p}'\Sigma_{1:p}^{-1} u_{1:p}\right) \exp\left(-\frac{1}{2\sigma^2}(u_{p+1:T}-X\phi)'(u_{p+1:T}-X\phi)\right) \\
+&\exp\left(-\frac{1}{2}(\phi - \underline{\phi})'\underline{\Sigma}_\phi^{-1}(\phi - \underline{\phi})\right)
+\end{align}
+
+Metropolis-step: sample a proposal as follows
+
+\begin{align}
+\overline{\phi} &=\overline{\Sigma}_\phi\left(\frac{1}{\sigma^2}X'u_{p+1:T} + \underline{\Sigma}^{-1}_\phi \underline{\phi}\right) \\
+\overline{\Sigma}_\phi^{-1} &= \frac{1}{\sigma^2} X'X + \Sigma_\phi^{-1} \\
+\phi|\cdot &\sim \mathrm{Normal}(\overline{\phi}, \overline{\Sigma}_\phi)
+\end{align}
+
+accept with probability $\min\left(1, |\Sigma_{1:p}|^{-1/2} \exp\left(-\frac{1}{2\sigma^2}u_{1:p}'\Sigma_{1:p}^{-1} u_{1:p}\right)\right)$

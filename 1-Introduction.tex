@@ -1,0 +1,72 @@
+\chapter{Introduction} % 3 pages ?
+
+% TODO possible structure:
+% - macro forecastin in general
+% - dynamic factor models (big data)
+% - mixed-frequency methods
+% - more detailed review of Bayesian dynamic factor models for forecasting
+
+Macro forecasts are important for central banks, policy makers and private firms. However, forecasting macroeconomic variables is difficult.\\
+
+Density forecast vs point forecasts\\
+
+% TODO: use GDP as an example
+% TODO: citations
+
+% TODO: A bird's eye view on macroeconomic forecasting
+
+Macroeconomic forecasting is challenging because of the following reasons:
+
+A large number of potential predictors is available. Economic theory is not helpful for selecting variables. The four most prominent ways to deal with the curse of dimensionality are forecast combination, variable selection, shrinkage and dimension reduction. Can be implemented both in the classical and in the Bayesian way. %TODO cite sth, maybe Stock Watson chapter in the handbook? or individual papers
+
+Predictive relationship are often not stable over time. While there is often a lot of in-sample evidence that the parameters in a forecast model are not constant over time, it has been difficult to exploit this knowledge in a forecasting model that takes this instability into account. Ad-hoc models like using a rolling estimation window typically work well. Note that parameter instability in linear models might also be caused by a non-linear data-generating process. \citep{Rossi2013, GiacominiRossi2015} % TODO decide which one to cite
+
+If one is interested in making density forecasts, time-varying error variances are also a concern. % TODO introduce density forecasts earlier?
+
+Some of the potential predictor variables are measured at a frequency that is different from the sampling frequency of the target variable. Most macroeconomic variables are measured annually, quarterly or monthly. Financial variables are typically available at a daily (or even higher) frequency. By aggregating the data, valuable information on the future evolution of the target variable might get lost. See \citet{ForoniMarcellino2013}.
+	
+The target variable and predictor variables are subject to publication lags. Publication lags of the target variable mean that now- and backcasting are also important \citep{BanburaEtal2013}. Publication lags of the predictors mean that the forecast model has to deal with missing observations at the end of the sample. 
+
+The target variable and predictor variables may be revised. Therefore, in order to fully exploit all the data that is available, the forecast model needs to extract information from all the available vintages and not just from the last one that was available at the forecast origin.
+
+Both the presence of publication lags and revisions mean that we should use real-time data to estimate competing models in forecast experiment and analyze their forecast precision.\\
+
+Dynamic factor models have emerged as one of the most popular type of forecast model, especially for forecasting real activity. The main idea behind it that the interdependences between variables are modeled by a small number of hidden variables (factors). It can be cast into state space form which means that missing observations (because of publication lags) can be dealt with in an elegant way. Furthermore, it is possible to modify dynamic factor models such that they can also be applied to mixed-frequency data.
+
+So far, most of the literature on forecasting with dynamic factor models focuses on frequentist estimation and point forecasts.
+
+In this thesis, I will focus on forecasting with Bayesian dynamic factor models. There are good reasons for using the Bayesian modeling framework, but in contrast to the VAR literature, the Bayesian approach to these models did not receive a lot of attention (shrinkage not as important, problems with identification and MCMC sampling). As the main reference throughout my thesis, I will use \citet{MarcellinoEtal2016}.\\
+
+% TODO: 4. forecasting with bayesian dynamic factor models did not receive much attention but are good reasons for using such models (literature review on bayesian dfms)
+
+% only articles, to my best knowledge, that apply Bayesian dfms to a typical macroeconomic dataset (quarterly and monthly)
+
+\textbf{\citet{LucianiRicci2014}} use a small-scale Bayesian mixed-frequency dynamic factor model to predict previous, current and next-quarter Norwegian GDP growth. Their model is
+\begin{align}
+y_{i,t} &= \sum_{s=0}^p \lambda_{i,s} f_{t-s} + \sum_{s=1}^p \rho_{i,s} x_{i,t-s} + e_{i,t} \\
+f_t &= \sum_{s=1}^p A_s f_{t-s} + u_t
+\end{align}
+% TODO: super weird that the lag length is supposed to be the same in all sums
+% TODO: is this the same as how I would write down the model (AR dynamics in the idiosyncratic component)?
+where $u_t\sim \mathrm{Normal}(0, I_r)$ and $e_{i,t}\sim \mathrm{Normal}(0, \psi_{i,t})$. They end up using $r=1$ and $p=12$. They claim that by letting the variables depend on past values of the factor they can take into account the ``dynamic heterogeneity of different variables'', such as survey variables. As the main reason for estimating their model using Bayesian methods, they state the high number of parameters. The use a set of 14 variables (both real variables and surveys), selected by looking at the Bloomberg calendar for Norway and the news section of both SSb and Norges Bank which are thought as good measures for variables that are followed closely by market participants. They use pseudo real-time data which means that they take into account publication lags but not revisions. 
+
+Criticism:
+\begin{itemize}
+	\item variable selection circular, after financial crisis other variables are followed by market participants (pseudo out-of-sample)
+	\item if you know that surveys are related to year-on-year GDP, model it this way
+	\item comparison with benchmarks unfair because revisions have not been taken into account (they mention this themselves)
+\end{itemize}
+
+\citet{MarcellinoEtal2016}: mixed-frequency, stochastic volatility, density forecasting
+
+\citet{DAgostinoEtal2016}: mixed-frequency, heterogeneous dynamics
+
+% TODO: should I put a more detailed review of Bayesian dynamic factor models in the theory section
+
+% further articles that forecast with Bayesian dfms
+
+\citet{ZhouEtal2014}: not only macro forecasting, dynamic sparsity, no mixed-frequency (?)
+
+\citet{Thorsrud2016a,Thorsrud2016b}: mixed-frequency with large mismatch, natural language processing
+
+% TODO: outline

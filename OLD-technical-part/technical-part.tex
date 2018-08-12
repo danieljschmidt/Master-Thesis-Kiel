@@ -1,0 +1,153 @@
+\documentclass[12pt,a4paper]{scrartcl}
+
+\usepackage[utf8]{inputenc}
+\usepackage[english]{babel}
+\usepackage{natbib}
+\usepackage{amsmath, amsthm, amssymb}
+
+\setlength\parindent{0pt} % no indent
+
+\title{Technical fragments for master's thesis}
+\author{Daniel Schmidt}
+
+\newcommand{\E}{\mathrm{E}}
+\newcommand{\Var}{\mathrm{Var}}
+
+\begin{document}
+	
+\maketitle
+
+\section{Linear gaussian state space model}
+
+\begin{align*}
+x_{t+1} &= A x_t + R_\epsilon \epsilon_t \\
+y^*_t   &= \mu + B x_t + R_\eta \eta_t \\
+y_t     &= S_t y_t 
+\end{align*}
+where $S_t$, $R_\epsilon$ and $R_\eta$ are selection matrices and $x_1 \sim \mathrm{Normal}(\mu_1, \Sigma_1)$, $\epsilon_t \sim \mathrm{Normal}(0, \Sigma_\epsilon)$ and $\eta_t \sim \mathrm{Normal}(0, \Sigma_\eta)$.
+
+\subsection{Fast state smoothing and simulation smoother}
+
+The \textbf{fast state space smoothing algorithm} \citep{bibid} is an efficient way to find $\mu_{t|T} = \E[x_t|y_{1:T}]$:
+
+\begin{align*}
+V &= R_\epsilon \Sigma_\epsilon R_\epsilon' \\
+W &= R_\eta \Sigma_\eta R_\eta'
+\end{align*}
+
+For $t=1:T$ perform the recursion:
+\begin{align*}
+\Delta y_t &= y_t - S_t(\mu + B x_t) \\
+F_t &= B_t \Sigma_{t|t-1} B_t' + S_t W_t S_t' \\
+M_t &= B_t' F_t^{-1} \\
+K_t &= A \Sigma_{t|t-1} M_t \\
+L_t &= A - K_t B_t \\
+q_t &= M_t \Delta y_t \\
+\mu_{t+1|t} &= A \mu_{t|t-1} + K_t \Delta y_t \\
+\Sigma_{t+1|t} &= A \Sigma_{t|t-1} L_t' + V 
+\end{align*}
+Only $q_T$ and $L_t$ need to be saved.
+
+Then, define $r_T=0$ and do for $t=T:-1:1$
+\begin{align*}
+r_{t-1} = q_t + L_t' r_t
+\end{align*}
+
+Finally, define $x_{1|T}=\mu_1 + \Sigma_1 r_0$ and do for $t=2:T$
+\begin{align*}
+\mu_{t+1|T} = A \mu_{t|T} + V r_t
+\end{align*}
+
+The \textbf{simulation smoother algorithm} \citep{bibid} is an efficient way to sample from $p(x_{1:T}|\theta, y_{1:T})$:
+\begin{itemize}
+	\item apply the fast state smoothing algorithm to $y_t$ to obtain $\mu_{1:T|T}$
+	\item draw $(\tilde{x}_{1:T}, \tilde{y}_{1:T})$ from the state space model
+	\item apply the fast state smoothing algorithm to $\tilde{y}_t$ to obtain $\tilde{\mu}_{1:T|T}$
+	\item $\tilde{x}_{1:T} - \tilde{\mu}_{1:T|T} + x_{1:T} \sim p(x_{1:T}|y_{1:T})$
+\end{itemize}
+
+\subsection{Precision-based algorithms}
+
+There is a problem with \textsf{BandedMatrices.jl}. However, the precision-based algorithm for a local level model and the stochastic volatility model works nicely in Python.
+
+\section{(Dynamic?) factor models}
+
+A baseline (dynamic?) factor model is
+\begin{align*}
+y^*_{i,t} &= \mu_i + \lambda_i f_{t} + u_{i,t}     \\
+f_t &= \phi f_{t-1} + v_t                   \\
+u_{i,t} &= \psi_{1i} u_{i,t-1} + w_{i,t}
+\end{align*}
+with $v_t \sim \mathrm{Normal}(0,\sigma^2_v)$ and $w_{i,t} \sim \mathrm{Normal}(0,\sigma^2_{w,i})$. In this model the scale and sign of $\lambda_i$ and $f_t$ are not identified which means that we have to fix either the scale (and sign) of $f_t$ or the scale (and sign) of one of the factor loading $\lambda_i$.
+
+In the following assume that $t$ is measured in months. If we want to include, say, GDP growth in our model, we have to take into account that GDP growth is measured on a quarterly basis. The relationship between quarterly and monthly growth rates is approximately: $y^q_t = w(L) y^m_t$ where $w(L) = \frac{1}{3} + \frac{2}{3} L + L^2 + \frac{2}{3} L^3 + \frac{1}{3} L^4$.
+
+\subsection{State space representation}
+
+\textbf{first approach:}
+\setcounter{MaxMatrixCols}{15} % default is 10
+\begin{align*}
+x_t &= \begin{pmatrix}
+f_t & f_{t-1} & f_{t-2} & f_{t-3} & f_{t-4} & u_{1,t} & u_{1,t-1} & u_{1,t-2} & u_{1,t-3} & u_{1,t-4} & u_{2,t} & \dots & u_{n,t}
+\end{pmatrix}' \\
+B &= \begin{pmatrix}
+\frac{1}{3}\lambda_1 & \frac{2}{3}\lambda_1 & \lambda_1 & \frac{2}{3}\lambda_1 & \frac{1}{3} \lambda_1 & \frac{1}{3} & \frac{2}{3} & 1 & \frac{2}{3} & \frac{1}{3} & 0 & \dots & 0\\
+\lambda_2 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 1 & \dots & 0\\
+\vdots & \vdots & \vdots & \vdots & \vdots & \vdots & \vdots & \vdots & \vdots & \vdots & \vdots & \ddots &  \vdots \\
+\lambda_n & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & \dots & 1\\
+\end{pmatrix}
+\end{align*}
+
+$A = \mathrm{blkdiag}(A_1, A_2, A_3)$ with
+\begin{align*}
+A_1 = \begin{pmatrix}
+\phi & 0 & 0 & 0 & 0 \\
+1 & 0 & 0 & 0 & 0 \\
+0 & 1 & 0 & 0 & 0 \\
+0 & 0 & 1 & 0 & 0 \\
+0 & 0 & 0 & 1 & 0 \\
+\end{pmatrix}  \quad
+A_2 = \begin{pmatrix}
+\psi_1 & 0 & 0 & 0 & 0 \\
+1 & 0 & 0 & 0 & 0 \\
+0 & 1 & 0 & 0 & 0 \\
+0 & 0 & 1 & 0 & 0 \\
+0 & 0 & 0 & 1 & 0 \\
+\end{pmatrix} \quad
+A_3 = \begin{pmatrix}
+\psi_2 & \dots  & 0 \\ 
+\vdots & \ddots & \vdots \\
+0      & \dots  & \psi_n
+\end{pmatrix}
+\end{align*}
+
+$\mu_\mathrm{SSM} = \begin{pmatrix} 3\mu_1& \mu_2 & \dots & \mu_n \end{pmatrix}$. Finally, $\epsilon_t = \begin{pmatrix} v_t & w_{1,t} & w_{2,t} & \dots & w_{n,t} \end{pmatrix}'$ and $R_\epsilon$ is an appropriate selection matrix. There is no error term $\eta_t$ in the observation equation.\\
+
+\textbf{second approach:}
+
+Transform $y_{i,t}$ for $i=2:n$ and $t=2:T$ as follows: $y_{i,t} \rightarrow y_{i,t} - \psi_i y_{i,t-1}$. We do not transform $y_{1,t}$ and $y_{i,1}$. We apply this transformation in order to decrease the length of the state vector (especially important for large $n$).
+\begin{align*}
+x_t &= \begin{pmatrix}
+f_t & f_{t-1} & f_{t-2} & f_{t-3} & f_{t-4} & u_{1,t} & u_{1,t-1} & u_{1,t-2} & u_{1,t-3} & u_{1,t-4}
+\end{pmatrix}' \\
+B_1 &= \begin{pmatrix}
+\frac{1}{3}\lambda_1 & \frac{2}{3}\lambda_1 & \lambda_1 & \frac{2}{3}\lambda_1 & \frac{1}{3} \lambda_1 & \frac{1}{3} & \frac{2}{3} & 1 & \frac{2}{3} & \frac{1}{3} \\
+\lambda_2 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 \\
+\vdots & \vdots & \vdots & \vdots & \vdots & \vdots & \vdots & \vdots & \vdots & \vdots \\
+\lambda_n & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 \\
+\end{pmatrix} \\
+B_t &= \begin{pmatrix}
+\frac{1}{3}\lambda_1 & \frac{2}{3}\lambda_1 & \lambda_1 & \frac{2}{3}\lambda_1 & \frac{1}{3} \lambda_1 & \frac{1}{3} & \frac{2}{3} & 1 & \frac{2}{3} & \frac{1}{3} \\
+\lambda_2 & -\lambda_2\psi_2 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 \\
+\vdots & \vdots & \vdots & \vdots & \vdots & \vdots & \vdots & \vdots & \vdots & \vdots \\
+\lambda_n & -\lambda_n\psi_n & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 \\
+\end{pmatrix} \quad \text{for $t=2:T$}
+\end{align*}
+
+$A = \mathrm{blkdiag}(A_1, A_2)$ with $A_1$ and $A_2$ as in the first approach. $\mu_{1,\mathrm{SSM}} = \begin{pmatrix} 3\mu_1& \mu_2 & \dots & \mu_n \end{pmatrix}$ and $\mu_{t,\mathrm{SSM}} = \begin{pmatrix} 3\mu_1& (1-\psi_2)\mu_2 & \dots & (1-\psi_n)\mu_n \end{pmatrix}$ for $t=2:T$. $\epsilon_t = \begin{pmatrix} v_t & w_{1,t} \end{pmatrix}$ and an appropriate $R_\epsilon$. $\eta_1 = \begin{pmatrix} u_{2,t} & \dots & u_{n,t} \end{pmatrix}$ and $\eta_t = \begin{pmatrix} w_{2,t} & \dots & w_{n,t} \end{pmatrix}$ for $t=2:T$ with an appropriate $R_\eta$.
+
+%\bibliographystyle{../myabbrvnat}
+%\bibliography{state-space-models}
+
+
+\end{document}

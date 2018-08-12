@@ -1,0 +1,80 @@
+
+\chapter{Details on the Gibbs sampler from section \ref{sec:est_simple}}
+
+\begin{align}
+x_{t+1} &= A x_t + R_v v_t \\
+\tilde{y}_t &= B x_t + R_w w_t
+\end{align}
+
+with $x_1 \sim \mathrm{Normal}(0, \Sigma_1)$ and $v_t \sim \mathrm{Normal}(0, V_t)$ and $w_t \sim \mathrm{Normal}(0, W_t)$
+
+\begin{align}
+p(y^Q_{1:T}, \tilde{y}^M_{1:T}, x_{1:T}, \theta) &= \prod_{t=1:T}p_\theta(y^Q_t|x_t) \cdot \prod_{t=1:T}p_\theta(\tilde{y}^M_t|x_t) \cdot p(x_1) \prod_{t=2:T}p_\theta(x_{t+1}|x_t) \cdot p(\theta) \\
+p_\theta(\tilde{y}^M_t|x_t) &= p_\theta(\psi^M(L)y^M_t|x_t) = p_\theta(y^M_t|x_t, y^M_{t-(1:q)})
+\end{align}
+
+\begin{align}
+p(\theta, x_{1:T}|y^Q_{1:T}, y^M_{-q+1:T}) \propto p(y^Q_{1:T}, \tilde{y}^M_{1:T}, x_{1:T}, \theta)
+\end{align}
+
+\subsection*{sample from $p(f_{-3:T}|y^Q_{1:T}, \tilde{y}^M_{1:T}, \theta)$}
+
+\section{sample from $p(\psi|f_{-3:T})$}
+
+prior: $p(\phi) \propto 1_{(\phi\text{ is stationary})}$
+
+\begin{align}
+\phi &\sim \mathrm{Normal}(\mu_\phi, \Sigma_\phi)\,1_{(\phi\text{ is stationary})} \\
+X_\phi &= [f_{0:T-1}, f_{-1:T-2}, \dots f_{1-p:T-p}] \\
+y_\phi &= f_{1:T} \\
+\mu_\phi &= (X_\phi'X_\phi)^{-1}X_\phi'y_\phi \\
+\Sigma_\phi &= \sigma_\epsilon^2 (X_\phi'X_\phi)^{-1}
+\end{align}
+
+\section{sample from $p(\mu^M, \lambda^M, {\sigma^2_\eta}^M|\tilde{y}^M_{1:T}, f_{-3:T})$}
+
+\textbf{sample from $p(\mu^M, \lambda^M|\tilde{y}^M_{1:T}, f_{-3:T}, {\sigma^2_\eta}^M)$}\\
+
+\noindent prior: $p(\mu^M, \lambda^M) \propto 1$
+
+\begin{align}
+\beta^M = \begin{bmatrix} \mu^M \\ \lambda^M \end{bmatrix} &\sim \mathrm{Normal}\left(\mu_\beta^M, \Sigma_\beta^M \right) \\
+X_\beta^M &= [\psi^M(1),\,\psi(L)f_{1:T}] \\
+y_\beta^M &= \psi(L)y^M_{1:T} \\
+\mu_\beta^M &= (X_\beta'X_\beta)^{-1}X_\beta'y_\beta \\
+\Sigma_\beta^M &= {\sigma_\eta^2}^M (X_\beta'X_\beta)^{-1}
+\end{align}
+
+\noindent \textbf{sample from $p({\sigma^2_\eta}^M|\tilde{y}^M_{1:T}, f_{-3:T}, \mu^M, \lambda^M)$}\\
+
+\noindent prior: $p({\sigma^2_\eta}^M) \propto ({\sigma^2_\eta}^M)^{-1/2}$
+
+\begin{align}
+{\sigma^2_\eta}^M &\sim \mathrm{InvGamma}(a_\eta, b_\eta) \\
+u_\eta &=  \tilde{y}^M_{1:T} - \psi^M(1)\mu^M - \lambda^M \psi^M(L)f_t\\
+a_\eta &= \frac{T}{2} \\
+b_\eta &= \frac{2}{u_\eta'u_\eta}
+\end{align}
+
+\section{sample from $p(\psi^M|y^M_{-q+1:T}, \mu^M, \lambda^M, {\sigma^2_\eta}^M)$}
+
+prior: $p(\phi) \propto 1_{(\psi^M\text{ is stationary})}$
+
+\begin{align}
+\psi^M &\sim \mathrm{Normal}(\mu_\psi^M, \Sigma_\psi^M) \cdot 1_{(\psi^M\text{ is stationary})}\\
+u_{1-i:T-i} &= y^M_{1-i:T-i} - \mu^M - \lambda^M f_{1-i:T-i} \\
+X_\psi &= [u_{0:T-1} \dots u_{1-q:T-q}] \\
+y_\psi &= u_{1:T} \\
+\mu^M_\psi &= {(X_\psi' X_\psi)}^{-1} X_\psi' y_\psi \\ % TODO double superscript
+\Sigma^M_\psi &= {\sigma_\eta^2}^M{(X_\psi' X_\psi)}^{-1}
+\end{align}
+
+\section{sample from $p(\mu^Q, \lambda^Q, {\sigma^2_\eta}^Q|y^Q_{1:T}, f_{-3:T})$}
+
+\textbf{sample from $p(\mu^Q, \lambda^Q|y^Q_{1:T}, f_{-3:T}, {\sigma^2_\eta}^Q)$}\\
+
+\noindent \textbf{sample from $p({\sigma^2_\eta}^Q|y^Q_{1:T}, f_{-3:T}, \mu^Q, \lambda^Q)$}\\
+
+\section{sample from $p(\psi^Q|y^Q_{1:T}, \mu^Q, \lambda^Q, {\sigma^2_\eta}^Q)$}
+
+prior: $p(\psi^Q) \propto 1_{(\psi^Q\text{ is stationary})}$

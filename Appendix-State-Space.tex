@@ -1,0 +1,119 @@
+\chapter{State space model representation and simulation smoothing}
+
+\section{SSM representation of brute-force approach}
+
+\setcounter{MaxMatrixCols}{15} % default is 10
+\begin{align*}
+x_t &= \begin{pmatrix}
+f_t & f_{t-1} & f_{t-2} & f_{t-3} & f_{t-4} & u_{1,t} & u_{1,t-1} & u_{1,t-2} & u_{1,t-3} & u_{1,t-4} & u_{2,t} & \dots & u_{n,t}
+\end{pmatrix}' \\
+B &= \begin{pmatrix}
+\frac{1}{3}\lambda_1 & \frac{2}{3}\lambda_1 & \lambda_1 & \frac{2}{3}\lambda_1 & \frac{1}{3} \lambda_1 & \frac{1}{3} & \frac{2}{3} & 1 & \frac{2}{3} & \frac{1}{3} & 0 & \dots & 0\\
+\lambda_2 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 1 & \dots & 0\\
+\vdots & \vdots & \vdots & \vdots & \vdots & \vdots & \vdots & \vdots & \vdots & \vdots & \vdots & \ddots &  \vdots \\
+\lambda_n & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & \dots & 1\\
+\end{pmatrix}
+\end{align*}
+
+$A = \mathrm{blkdiag}(A_1, A_2, A_3)$ with
+\begin{align*}
+A_1 = \begin{pmatrix}
+\phi & 0 & 0 & 0 & 0 \\
+1 & 0 & 0 & 0 & 0 \\
+0 & 1 & 0 & 0 & 0 \\
+0 & 0 & 1 & 0 & 0 \\
+0 & 0 & 0 & 1 & 0 \\
+\end{pmatrix}  \quad
+A_2 = \begin{pmatrix}
+\psi_1 & 0 & 0 & 0 & 0 \\
+1 & 0 & 0 & 0 & 0 \\
+0 & 1 & 0 & 0 & 0 \\
+0 & 0 & 1 & 0 & 0 \\
+0 & 0 & 0 & 1 & 0 \\
+\end{pmatrix} \quad
+A_3 = \begin{pmatrix}
+\psi_2 & \dots  & 0 \\ 
+\vdots & \ddots & \vdots \\
+0      & \dots  & \psi_n
+\end{pmatrix}
+\end{align*}
+
+$\mu_\mathrm{SSM} = \begin{pmatrix} 3\mu_1& \mu_2 & \dots & \mu_n \end{pmatrix}$. Finally, $\epsilon_t = \begin{pmatrix} v_t & w_{1,t} & w_{2,t} & \dots & w_{n,t} \end{pmatrix}'$ and $R_\epsilon$ is an appropriate selection matrix. There is no error term $\eta_t$ in the observation equation.\\
+
+\section{SSM representation of transformation approach}
+
+
+Transform the monthly variables $y_{2:n,t}$ as follows
+\begin{align}
+y_{i,1:p} &\rightarrow L^{-1} y_{i,1:p} \\
+y_{i,t}   &\rightarrow \psi(L) y_{i,t} \text{ for } t=(p+1):T
+\end{align}
+We do not transform the quarterly variable $y_{1,t}$. We apply this transformation in order to decrease the length of the state vector (especially important for large $n$).
+% TODO: in the following, only $p=1$
+% TODO: for everything else, we need to increase the state vector for some period ????
+\begin{align*}
+x_t &= \begin{pmatrix}
+f_t & f_{t-1} & f_{t-2} & f_{t-3} & f_{t-4} & u_{1,t} & u_{1,t-1} & u_{1,t-2} & u_{1,t-3} & u_{1,t-4}
+\end{pmatrix}' \\
+B_1 &= \begin{pmatrix}
+\frac{1}{3}\lambda_1 & \frac{2}{3}\lambda_1 & \lambda_1 & \frac{2}{3}\lambda_1 & \frac{1}{3} \lambda_1 & \frac{1}{3} & \frac{2}{3} & 1 & \frac{2}{3} & \frac{1}{3} \\
+\sqrt{1-\psi_2^2}\cdot\lambda_2 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 \\
+\vdots & \vdots & \vdots & \vdots & \vdots & \vdots & \vdots & \vdots & \vdots & \vdots \\
+\sqrt{1-\psi_n^2}\cdot\lambda_n & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 \\
+\end{pmatrix} \\
+B_t &= \begin{pmatrix}
+\frac{1}{3}\lambda_1 & \frac{2}{3}\lambda_1 & \lambda_1 & \frac{2}{3}\lambda_1 & \frac{1}{3} \lambda_1 & \frac{1}{3} & \frac{2}{3} & 1 & \frac{2}{3} & \frac{1}{3} \\
+\lambda_2 & -\psi_2\lambda_2 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 \\
+\vdots & \vdots & \vdots & \vdots & \vdots & \vdots & \vdots & \vdots & \vdots & \vdots \\
+\lambda_n & -\psi_n\lambda_n & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 \\
+\end{pmatrix} \quad \text{for $t=2:T$}
+\end{align*}
+
+$A = \mathrm{blkdiag}(A_1, A_2)$ with $A_1$ and $A_2$ as in the first approach. $\mu_{1,\mathrm{SSM}} = \begin{pmatrix} 3\mu_1& \sqrt{1-\psi_1^2}\mu_2 & \dots & \sqrt{1-\psi_n^2}\mu_n \end{pmatrix}$ and $\mu_{t,\mathrm{SSM}} = \begin{pmatrix} 3\mu_1& (1-\psi_2)\mu_2 & \dots & (1-\psi_n)\mu_n \end{pmatrix}$ for $t=2:T$. $\epsilon_t = \begin{pmatrix} v_t & w_{1,t} \end{pmatrix}$ and an appropriate $R_\epsilon$. $\eta_1 = \begin{pmatrix} \sqrt{1-\psi_2^2} u_{2,t} & \dots & \sqrt{1-\psi_n^2} u_{n,t} \end{pmatrix}$ and $\eta_t = \begin{pmatrix} w_{2,t} & \dots & w_{n,t} \end{pmatrix}$ for $t=2:T$ with an appropriate $R_\eta$.
+
+\section{Kalman filter}
+
+\begin{align}
+V &= R_\epsilon \Sigma_\epsilon R_\epsilon' \\
+W &= R_\eta \Sigma_\eta R_\eta'
+\end{align}
+
+For $t=1:T$ perform the recursion:
+\begin{align}
+\Delta y_t &= y_t - S_t(\mu + B x_t) \\
+F_t &= B_t \Sigma_{t|t-1} B_t' + S_t W_t S_t' \\
+M_t &= B_t' F_t^{-1} \\
+K_t &= A \Sigma_{t|t-1} M_t \\
+L_t &= A - K_t B_t \\
+q_t &= M_t \Delta y_t \\
+\mu_{t+1|t} &= A \mu_{t|t-1} + K_t \Delta y_t \\
+\Sigma_{t+1|t} &= A \Sigma_{t|t-1} L_t' + V 
+\end{align}
+
+\section{Fast state smoothing and simulation smoothing (Durbin and Koopman, 2002)}
+
+Run the Kalman filter. Only $q_t$ and $L_t$ need to be saved. Then, define $r_T=0$ and do for $t=T:-1:1$
+\begin{align*}
+r_{t-1} = q_t + L_t' r_t
+\end{align*}
+
+Finally, define $x_{1|T}=\mu_1 + \Sigma_1 r_0$ and do for $t=2:T$
+\begin{align*}
+\mu_{t+1|T} = A \mu_{t|T} + V r_t
+\end{align*}
+
+The \textbf{simulation smoother algorithm} \citep{bibid} is an efficient way to sample from $p(x_{1:T}|\theta, y_{1:T})$:
+\begin{itemize}
+	\item apply the fast state smoothing algorithm to $y_t$ to obtain $\mu_{1:T|T}$
+	\item draw $(\tilde{x}_{1:T}, \tilde{y}_{1:T})$ from the state space model
+	\item apply the fast state smoothing algorithm to $\tilde{y}_t$ to obtain $\tilde{\mu}_{1:T|T}$
+	\item $\tilde{x}_{1:T} - \tilde{\mu}_{1:T|T} + x_{1:T} \sim p(x_{1:T}|y_{1:T})$
+\end{itemize}
+
+\section{Carter and Kohn (1994) simulation smoothing}
+
+% TODO
+
+\section{Simulation smoothing based on the precision matrix}
+
+There is a problem with \textsf{BandedMatrices.jl}. However, the precision-based algorithm for a local level model and the stochastic volatility model works nicely in Python.

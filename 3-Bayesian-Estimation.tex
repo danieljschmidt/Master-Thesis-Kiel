@@ -1,0 +1,122 @@
+\chapter{Bayesian estimation of mixed-frequency dynamic factor models}
+
+In the first section, we consider Bayesian estimation of a simple mixed-frequency dynamic factor model with only one factor that does not allow for dynamic heterogeneity or stochastic volatility.
+
+\section{Bayesian estimation of a simple MF-DFM}
+\label{sec:est_simple}
+
+Consider a simple dynamic factor model with only one factor, constant volatility and dynamic homogeneity ($r=0$): 
+\begin{align}
+y^*_t &= \mu + \lambda f_{t} + u_{t}     			  \label{eq:dfm_obs} \\
+f_t &= \phi_1 f_{t-1} + \dots \phi_p f_{t-p} + v_t    \label{eq:dfm_trans_f}   \\
+u_{i,t} &= \psi_{i,1} u_{i,t-1} + \dots + \psi_{i,q_i} u_{i,t-q_i} +  w_{i,t} 					   \label{eq:dfm_trans_u}
+\end{align}
+
+Because of $\lambda_i' f_t' = \lambda_i f_t$ for any $\lambda_i' = c \lambda_i$ and $f_t' = f_t/c$, $f_t$ and $\lambda_i$ are not identified without further restrictions. We set $\sigma^2_v=1$ such that only the sign of $f_t$ and $\lambda_i$ is not uniquely determined.
+
+For the sake of simplicity, we assume that only the first variable is measured at a quarterly frequency such that
+\begin{align}
+y_{1,t} &=  \frac{1}{3} y^*_{1,t} + \frac{2}{3} y^*_{1,t-1} + y^*_{1,t-2} + \frac{2}{3} y^*_{1,t-3} + \frac{1}{3} y^*_{1,t-4} \\
+&= 3\mu_1 + \lambda_1 \left(\frac{1}{3} f_{t} + \frac{2}{3} f_{t-1} +  f_{t-2} + \frac{2}{3} f_{t-3} + \frac{1}{3} f_{t-4} \right) + \\
+& \quad \frac{1}{3} u_{1,t} + \frac{2}{3} u_{1,t-1} +  u_{1,t-2} + \frac{2}{3} u_{1,t-3} + \frac{1}{3} u_{1,t-4}
+\end{align}
+every third month and $y_{1,t} = \mathrm{NaN}$ otherwise while for $i=2:n$, $y_{i,t} = y^*_{i,t}$ (apart from possibly missing observations at the end of the sample). Moreover, $p \le 5$ (???) and $q_i \le 4$.\\
+
+Broad idea: Gibbs sampler, two blocks, simulation smoothing most computationally expensive -> think hard about how to make it computationally cheaper (most to gain from alternative representation)
+
+make state vector as small as possible by using the transformation
+
+justify conditioning on the initial monthly observations by the fact that parameters in linear econometric models are not stable over time and therefore observations in the far distance are less valuable
+
+mention that the Jungbacker and Koopman trick does not work because of the quarterly variable
+
+discuss priors and cite \citet{BaiWang2015}
+
+compare with other approaches
+
+\begin{figure}[tb]
+	\includegraphics[scale=1.]{../Master-Thesis-Code/plots/plot_arma_problem_2.pdf}
+	\caption{20 000 MCMC draws from $p(\psi_1, \sigma^2_{w,1}|\cdot)$}
+	\small inefficiency factor from $\psi_1$: $\approx 69$, inefficiency factor for $\sigma^2_{w,1}$: $\approx 64$ (rhomax = 1000), 1000 burn-in, true values as initial values, true values $\sigma^2_{w,1}=1$ and $\psi_1=0.2$, I can look up other true values if necessary since random seed is the same, $p=q=1$, $n=20$, $T=300$ (corresponds to 25 years of data), effectively only 100 data points, problem becomes less severe for larger sample size, e.g. $T=3000$ with same parameters, inefficiency factors below 30, narrower region in the parameter space (all $psi_1$ between $0$ and $0.4$ and all $\sigma^2_{w,1}$ between $0.5$ and $1.5$), inefficiency factors are also lower for $psi_1$ closer to 1, problem generalizes to $q>1$ but is then more difficult to illustrate graphically
+	\label{fig:arma_problem}
+\end{figure}
+
+\textbf{Step 1: $p(f_{-3:T}|\theta, y_{1:T})$}
+
+To this end, we rewrite the dynamic factor model such that it becomes a state space model
+\begin{align}
+\label{eqn:ssm_obs}
+x_t &= A x_{t-1} + R_v v_t \\
+y_t &= m_t + B_t x_t + R_{w,t} w_t
+\end{align}
+%TODO \mu is used in the DFM as well!!
+with $x_1\sim \mathrm{Normal}(\mu_{x,1}, \Sigma_{x,1})$, $\epsilon_t\sim \mathrm{Normal}(0, \Sigma_{\epsilon,t})$ and $\eta_t\sim \mathrm{Normal}(0, \Sigma_{\eta,t})$. The approach by \citet{MarcellinoEtal2016} is to choose the state vector as 
+\begin{align}
+x_t = [f_t, \dots f_{t-4}, u_{1,t}, \dots u_{1, t-4}, u_{2,t}, \dots u_{n,t}].
+\end{align}
+However, by quasi-differencing the monthly variables, it is possible to drop the corresponding idiosyncratic components from the state vector such that 
+\begin{align}
+x_t = [f_t, \dots f_{t-4}, u_{1,t}, \dots u_{1, t-4}]. 
+\end{align}
+See the appendix for details on the state space representation. \\
+% TODO discuss computational savings
+% TODO discuss the Koopman and Jungbacker trick for collapsed dfms, discuss the role of missing observations
+
+\textbf{Step 2: $p(\phi_{1:p}|f_{-3:T}, \sigma_{v}^2)$}\\
+(we do not need to sample $\sigma_v^2$ since it takes the value $1$ in order to achieve identification - apart from the sign indeterminacy)
+\begin{align*}
+p(\phi_{1:p}|f_{-3:T}, \sigma_v^2) \propto p(f_{-3:T}|\phi_{1:p}, \sigma_v^2) p(\phi_{1:p})
+\end{align*}
+where
+\begin{align*}
+p(f_{-3:T}|\phi_{1:p}, \sigma_{v}^2) = p(f_{-3:(-3+p-1)}|\phi, \sigma_{v}^2)\prod_{t=(-3+p):T} p(f_t|f_{(t-1):(t-p)}, \phi, \sigma_{v}^2)
+\end{align*}
+
+For $p(\phi)$ (if $p=1$), I might use a uniform prior on $[-1,1]$ or, more general, a Beta-type prior for $\frac{\phi+1}{2}$. An alternative is a truncated Normal prior.\\
+
+\textbf{Step 3: $p(\mu, \lambda, \psi, \sigma_{w}^2|y_{1:T}, f_{-3:T})$ - monthly variables}
+
+This is a linear regression with AR errors as described in \citet[section 4.1]{ChibGreenberg1994}
+\begin{align}
+y_{i,t} &= \mu_i + \lambda_i f_t + u_{i,t} = x_t\beta_i + u_{i,t} \\
+\psi_i(L)u_{i,t} &= w_{i,t}
+\end{align}
+where $x_t = \begin{pmatrix} 1 & f_t \end{pmatrix}$ and $\beta_i = \begin{pmatrix} \mu_i & \lambda_i \end{pmatrix}'$.\\
+
+Define $\tilde{y}_{1:T}$ and $\tilde{X}_{1:T}$ as follows:
+\begin{align}
+\tilde{y}_{1:p} &= L^{-1}y_{1:p}\\ 
+\tilde{X}_{1:p} &= L^{-1}X_{1:p}\\
+\tilde{y}_t     &= \psi_i(L) y_t \text{ for } t=(p+1):T\\
+\tilde{x}_t     &= \psi_i(L) x_t \text{ for } t=(p+1):T
+\end{align}
+where $L$ is the lower Cholesky factor of the matrix $\Sigma_{1:p}=LL'$ that is defined by $\Sigma_{1:p} = \Psi \Sigma_{1:p} \Psi' + [1,0, \dots 0]'\cdot[1,0, \dots 0]$. $\Psi = [\psi_{1:q_i}; I_{p-1} \; 0_{p-1\times 1}]$.
+
+\begin{align*}
+\beta_i &\sim \mathrm{Normal}(\overline{\beta}_i, \overline{\Sigma}_{\beta,i}) \\
+\psi_{i,1:q_i} &\sim \dots \\
+\sigma_{w,i}^2 &\sim \mathrm{InvGamma}()
+\end{align*}
+
+where $\overline{\beta}_i = (\tilde{X}'\tilde{X})^{-1}\tilde{X}'\tilde{y}$ and $\overline{\Sigma}^{-1}_{\beta,i}= \sigma_{w,i}^{-2} \tilde{X}'\tilde{X}$
+
+Metropolis-Hastings for $\psi$\\
+
+\textbf{Step 3: $p(\mu, \lambda, \psi, \sigma_{w}^2|y_{1:T}, f_{-3:T})$ - quarterly variables}
+
+This is a linear regression with ARMA(1,4) errors if only every third observation is available:
+\begin{align}
+y_{i,t} &= \mu_i + \lambda_i w(L)f_t + e_{i,t} \\
+e_{i,t} &= \psi_i e_{i,t-1} + \frac{1}{3}w_t + \frac{2}{3}w_{t-1} + w_{t-2} + \frac{2}{3}w_{t-3} + \frac{1}{3}w_{t-4}
+\end{align}
+The transformation approach as in Chib and Greenberg (1994) is not possible because of the missing observations. Instead, we need to calculate the full variance-covariance matrix.
+
+
+
+\section{Bayesian estimation of more general MF-DFMs}
+
+\subsection*{Dynamic heterogeneity}
+
+\subsection*{More than one factor}
+
+\subsection*{Stochastic volatility}

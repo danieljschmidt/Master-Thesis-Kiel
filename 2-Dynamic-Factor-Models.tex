@@ -1,0 +1,61 @@
+\chapter{Dynamic factor models and mixed-frequency data}
+
+\section{Dynamic factor models}
+
+% introductory section: 3/2 - 2 pages
+
+As a starting point, consider a static factor model
+\begin{align}
+y^*_t = \mu + \Lambda f_t + \xi_t \label{eq:static_fm}
+\end{align}
+where $y^*_t$ is a $n \times 1$ column vector of observations, $f_t$ is a $m \times 1$ column vector of unobserved factors and $\xi_t$ is a $n \times 1$ vector of i.i.d.~normally distributed errors. Typically, $m$ is much smaller than $n$ and therefore the static factor model provides a parsimonious description of the covariance between the variables in $y^*_t$. The $n \times m$ matrix $\Lambda$ contains the so-called factor loadings that describe [how the variables are related to the factors???]. % TODO: rewrite + identification
+
+As the index $t$ already suggests, we would like to apply a factor model to time series data because the basic idea behind the static factor model - describing the interdependences between observed variables by a smaller number of unobserved variables - is also likely to be helpful in a time series context. For example, consider a one-factor model with variables $y^*_t$ that are related to real economic activity. In such a model, $f_t$ can be seen as a business cycle indicator and is likely to explain a huge fraction of the variability in $y^*_t$. 
+
+However, some modifications are needed to make the factor model in equation \ref{eq:static_fm} more appropriate for time series data. In our example, most variables that measure real activity have a positive autocorrelation, it is natural to model either the business cycle indicator $f_t$ or the errors $\xi_t$ (or both) as AR processes. Furthermore, some of the variables in $y^*_t$ may lag behind the business cycle which is not accounted for in equation (\ref{eq:static_fm}). These informal considerations suggest that a more general dynamic factor model is \citep{BaiWang2015}: 
+\begin{align}
+y^*_t &= \mu + \Lambda_0 f_t + \cdots + \Lambda_{r} f_{t-r} + \xi_t \\
+f_t &= \Phi_1 f_{t-1} + \dots + \Phi_p f_{t-p} + v_t   \\
+\xi_{t} &= \Psi_{1} \xi_{t-1} + \dots + \Psi_{q} \xi_{t-q} + w_{t}   
+\end{align}
+where $q=\max_i(q_i)$.\footnote{
+	Note that some authors, such as \citet{BaiWang2015}, refer to a factor model with only the first type of dynamics as a static factor model.
+}\\ % TODO: identification problem
+
+% TODO: literature review
+
+\citet{LucianiRicci2014} and \citet{DAgostinoEtal2016} ... \\
+
+\citet{MarcellinoEtal2016} stochastic volatility
+
+\section{Dealing with mixed-frequency data and missing observations}
+
+We can deal with missing observations by defining $y_t$ such that it only contains the elements in $y_t^*$ that are observed
+\begin{align}
+y_t = S_t y^*_t = S_t\mu + S_t \lambda f_t + S_t \xi_t
+\end{align}
+where $S_t$ is an appropriate selection matrix. In a typical macroeconomic dataset, we only have missing values at the end of the sample (and maybe at the beginning). \\
+
+
+There are to possibilities to deal with mixed-frequency data in this model. For illustration, assume that $y_t^Q$ is quarter-on-quarter GDP growth, assigned to the last month in each quarter, and that $y_t^M$ denotes the unobserved monthly GDP growth.  
+
+% 1. approach: no approximation
+\citet{ProiettiMoauro2006}
+Without any approximations, this means that we have to leave the framework of linear Gaussian state space models. See ??? for an example.
+
+% 2. approach: linear approximation
+Another possibility is to resort to the following approximation of observed quarterly GDP growth in terms of a weighted sum of (unobserved) GDP growth in the past months:
+\begin{align}
+y^Q_{t} &\approx w(L) y^M_{t} \\ \label{eq:m2q}
+&\approx 3\mu_1 + \lambda_1 w(L) f_t + w(L) \xi_{1,t}
+\end{align}
+with $w(L) = \frac{1}{3} + \frac{2}{3} L + L^2 + \frac{2}{3} L^3 + \frac{1}{3} L^4$. This approximate linear relation between quarterly and monthly growth variables goes back to \citet{MarianoMurasawa2003} who, however, did not make clear that it is an approximation. Moreover, in \citet{LucianiRicci2014} and \citet{BanburaEtal2013}, the wrong relation
+\begin{align*}
+y^Q_{t} &\approx y^M_{t} + 2y^M_{t-1} + 3y^M_{t-2} + 2y^M_{t-3} + y^M_{t-4}
+\end{align*}
+is used. \citet[p. 239]{LucianiRicci2014} even claim that the approximation $\log Y_t^Q = \log Y_t^M + \log Y_{t-1}^M + \log Y_{t-2}^M$ holds (somewhat hidden, since they define $Y_t$ to denote what I denote as $\log Y_t$). However, this error does not affect the generated forecasts since it merely changes the scale of the unobserved monthly GDP and therefore the scale of the factor loading and of the idiosyncratic components. Because there seems to be so much confusion about this relation and I could not find a proper derivation in the literature, I derive equation \ref{eq:m2q} in appendix \ref{sec:mariano-murasawa}.\\
+
+The roots of the MA lag polynomial are $-0.5+\frac{\sqrt{3}}{2} i$ and $-0.5-\frac{\sqrt{3}}{2} i$. Therefore, all roots lie on the unit circle and the lag polynomial is not invertible.\\
+
+% TODO: discuss advantages
+% TODO: mention that MA lag polynomial is not invertible and discuss what follows from that
