@@ -1,34 +1,32 @@
-\chapter{Dynamic factor models and mixed-frequency data}
+\chapter{Dynamic factor models and mixed-frequency data}\label{sec:dfm}
 
 \section{Dynamic factor models}
 
 % introductory section: 3/2 - 2 pages
 
+% TODO mean zero!!!
+
 As a starting point, consider a static factor model
 \begin{align}
-y^*_t = \mu + \Lambda f_t + \xi_t \label{eq:static_fm}
+y_t = \mu + \Lambda f_t + u_t \label{eq:static_fm}
 \end{align}
-where $y^*_t$ is a $n \times 1$ column vector of observations, $f_t$ is a $m \times 1$ column vector of unobserved factors and $\xi_t$ is a $n \times 1$ vector of i.i.d.~normally distributed errors. Typically, $m$ is much smaller than $n$ and therefore the static factor model provides a parsimonious description of the covariance between the variables in $y^*_t$. The $n \times m$ matrix $\Lambda$ contains the so-called factor loadings that describe [how the variables are related to the factors???]. % TODO: rewrite + identification
+where $y_t$ is a $n \times 1$ column vector of observations, $f_t$ is a $m \times 1$ column vector of unobserved factors and $u_t$ is a $n \times 1$ vector of i.i.d.~normally distributed errors. Typically, $m$ is much smaller than $n$ and therefore the static factor model provides a parsimonious description of the covariance between the variables in $y_t$. The $n \times m$ matrix $\Lambda$ contains the so-called factor loadings that describe [how the variables are related to the factors???]. % TODO: rewrite + identification
 
-As the index $t$ already suggests, we would like to apply a factor model to time series data because the basic idea behind the static factor model - describing the interdependences between observed variables by a smaller number of unobserved variables - is also likely to be helpful in a time series context. For example, consider a one-factor model with variables $y^*_t$ that are related to real economic activity. In such a model, $f_t$ can be seen as a business cycle indicator and is likely to explain a huge fraction of the variability in $y^*_t$. 
+As the index $t$ already suggests, we would like to apply a factor model to time series data because the basic idea behind the static factor model - describing the interdependences between observed variables by a smaller number of unobserved variables - is also likely to be helpful in a time series context. For example, consider a one-factor model with variables $y_t$ that are related to real economic activity. In such a model, $f_t$ can be seen as a business cycle index and is likely to explain a huge fraction of the variability in $y_t$. 
 
-However, some modifications are needed to make the factor model in equation \ref{eq:static_fm} more appropriate for time series data. In our example, most variables that measure real activity have a positive autocorrelation, it is natural to model either the business cycle indicator $f_t$ or the errors $\xi_t$ (or both) as AR processes. Furthermore, some of the variables in $y^*_t$ may lag behind the business cycle which is not accounted for in equation (\ref{eq:static_fm}). These informal considerations suggest that a more general dynamic factor model is \citep{BaiWang2015}: 
+However, some modifications are needed to make the factor model in equation \ref{eq:static_fm} more appropriate for time series data. To stick with our example, most variables that measure real activity have a positive autocorrelation. Therefore is natural to model either the business cycle index $f_t$ or the errors $u_t$ (or both) as AR processes. Furthermore, some of the variables in $y_t$ may lag behind the business cycle or lead it which is not accounted for in equation (\ref{eq:static_fm}). These informal considerations suggest that a more general dynamic factor model is \citep{BaiWang2015}: 
 \begin{align}
-y^*_t &= \mu + \Lambda_0 f_t + \cdots + \Lambda_{r} f_{t-r} + \xi_t \\
+y_t &= \mu + \Lambda_0 f_t + \cdots + \Lambda_{r} f_{t-r} + u_t \\
 f_t &= \Phi_1 f_{t-1} + \dots + \Phi_p f_{t-p} + v_t   \\
-\xi_{t} &= \Psi_{1} \xi_{t-1} + \dots + \Psi_{q} \xi_{t-q} + w_{t}   
+u_{t} &= \Psi_{1} u_{t-1} + \dots + \Psi_{q} u_{t-q} + w_{t}   
 \end{align}
-where $q=\max_i(q_i)$.\footnote{
+where $\Psi_1, \dots \Psi_q$ are diagonal.\footnote{
 	Note that some authors, such as \citet{BaiWang2015}, refer to a factor model with only the first type of dynamics as a static factor model.
 }\\ % TODO: identification problem
 
-% TODO: literature review
+% TODO: Also discuss the relevance of extensions for forecasting: autocorrelation in factor and idiosyncratic components, dynamic heterogeneity, stochastic volatility, time varying mean and factor loadings
 
-\citet{LucianiRicci2014} and \citet{DAgostinoEtal2016} ... \\
-
-\citet{MarcellinoEtal2016} stochastic volatility
-
-\section{Dealing with mixed-frequency data and missing observations}
+\section{Dealing with mixed-frequency data and missing observations}\label{sec:mixed-frequency}
 
 We can deal with missing observations by defining $y_t$ such that it only contains the elements in $y_t^*$ that are observed
 \begin{align}
@@ -59,3 +57,16 @@ The roots of the MA lag polynomial are $-0.5+\frac{\sqrt{3}}{2} i$ and $-0.5-\fr
 
 % TODO: discuss advantages
 % TODO: mention that MA lag polynomial is not invertible and discuss what follows from that
+
+\section{Mixed-frequency dynamic factor models for nowcasting GDP growth}
+
+
+% TODO: literature review
+
+standard nowcasting model: \\
+
+\citet{LucianiRicci2014} and \citet{DAgostinoEtal2016} ... \\
+
+\citet{MarcellinoEtal2016} stochastic volatility \\
+
+\citet{AntolinDiazEtal2017} \\

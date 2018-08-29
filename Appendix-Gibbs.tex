@@ -78,3 +78,51 @@ y_\psi &= u_{1:T} \\
 \section{sample from $p(\psi^Q|y^Q_{1:T}, \mu^Q, \lambda^Q, {\sigma^2_\eta}^Q)$}
 
 prior: $p(\psi^Q) \propto 1_{(\psi^Q\text{ is stationary})}$
+
+\section{Linear regression with variable selection prior}
+
+% TODO there is some stuff missing in the conditioning set
+
+% TODO capital P and p
+
+\begin{align}
+\frac{P(\omega_i=1|\cdot)}{P(\omega_i=0|\cdot)} &= \frac{p(y_i|\omega_i=1)}{p(y_i|\omega_i=0)}\cdot \frac{P(\omega_i=1)}{P(\omega_i=0)} \\
+&= \frac{p(y_i|\omega_i=1)}{p(y_i|\omega_i=0)}\cdot\frac{\rho}{1-\rho}
+\end{align}
+\begin{align}
+p(y_i|\omega_i=1) &= \int d\lambda_i p(y_i|\lambda_i) p(\lambda_i|\omega_i=1) \\
+&\propto \int d\lambda_i \exp{\left(-\frac{1}{2\sigma_i^2}(y_i-\lambda_i f)'(y_i-\lambda_i f)\right)} \exp{\left(-\frac{1}{2\tau^2}\lambda_i^2\right)} \\ 
+&\propto \exp{\left(-\frac{y_i'y_i}{2\sigma_i^2} + \frac{\mu_{\lambda_i}^2}{2\sigma_{\lambda_i}^2}\right)} \int d\lambda_i \exp{\left(-\frac{1}{2\sigma_{\lambda_i}^2}(\lambda_i - \mu_{\lambda_i})^2\right)} \\
+&\propto \exp{\left(-\frac{y_i'y_i}{2\sigma_i^2} + \frac{\mu_{\lambda_i}^2}{2\sigma_{\lambda_i}^2}\right)} \\
+&\propto \exp{\left(-\frac{1}{2}y_i'\left(\frac{1}{\sigma_i^2} - \frac{\sigma_{\lambda_i}^2}{\sigma_i^4} f'f\right)y_i\right)} \\
+&\propto \exp{\left(-\frac{y_i'y_i}{2({\tau^2 f'f + \sigma_i^2})}\right)}
+\end{align}
+
+where $\sigma_{\lambda_i}^{-2} = \frac{1}{\sigma_i^2}f'f + \frac{1}{\tau^2}$ and $\mu_{\lambda_i} = \sigma_{\lambda_i}^2 \frac{f'y_i}{\sigma_i^2}$
+
+completing the square, integrate out
+
+\begin{align}
+p(y_i|\omega_i=1) &= \frac{1}{\sqrt{2\pi(\tau^2 f'f + \sigma^2)}}\exp{\left(-\frac{y_i'y_i}{2\sigma_i^2} + \frac{\mu_{\lambda_i}^2}{2\sigma_{\lambda_i}^2}\right)}
+\end{align}
+
+\begin{align}
+p(y_i|\omega_i=0) &= \int d\lambda_i\;p(y_i|\lambda_i) p(\lambda_i|\omega_i=0) \\
+&= \int d\lambda_i\;p(y_i|\lambda_i) \delta_0(\lambda_i) \\
+&= p(y_i|\lambda_i=0) \\
+&= \frac{1}{\sqrt{2\pi\sigma^2}}\exp{\left(-\frac{y_i'y_i}{2\sigma^2}\right)}
+\end{align}
+
+\begin{align}
+\frac{p(y_i|\omega_i=1)}{p(y_i|\omega_i=0)} &= \sqrt{\frac{\sigma^2}{\tau^2 f'f + \sigma^2}}\exp{\left( \frac{\mu_{\lambda_i}^2}{2\sigma_{\lambda_i}^2}\right)} \\
+&= \sqrt{\frac{1}{\frac{\tau^2}{\sigma^2} f'f + 1}}\exp{\left( \frac{\mu_{\lambda_i}^2}{2\sigma_{\lambda_i}^2}\right)} \\
+&=\sqrt{\frac{\sigma_{\lambda_i}^2}{\tau^2}}\exp{\left( \frac{\mu_{\lambda_i}^2}{2\sigma_{\lambda_i}^2}\right)}
+\end{align}
+
+same as the \citet{KaufmannSchumacher2017} result in Appendix A.2
+
+\begin{align}
+\frac{p(\lambda_i|\omega_i=1)|_{\lambda_i=0}}{p(\lambda_i|\omega_i=1, \cdot)|_{\lambda_i=0}} 
+&= \sqrt{\frac{\sigma_{\lambda_i}^2}{\tau^2}} \exp{\left(-\frac{\lambda_i^2}{2\tau^2}\vert_{\lambda_i=0} + \frac{(\lambda_i-\mu_{\lambda_i})^2}{2\sigma_{\lambda_i}^2}\vert_{\lambda_i=0}\right)} \\
+&=\sqrt{\frac{\sigma_{\lambda_i}^2}{\tau^2}}\exp{\left( \frac{\mu_{\lambda_i}^2}{2\sigma_{\lambda_i}^2}\right)}
+\end{align}

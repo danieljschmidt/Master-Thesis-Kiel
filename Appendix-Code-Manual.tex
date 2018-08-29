@@ -1,12 +1,28 @@
 \chapter{Code manual}
 
-Mostly matlab, no external packages or functions from someone else (?)
+code is attached to the thesis (with data, partially) and also on github
+
+\section{Used programming languages and packages}
+
+% TODO make clear where I use material of others
+% TODO point out versions
+
+Mostly matlab (2017b), no toolboxes (betarnd???) or functions from someone else (?)\\
 
 Downloading and simple preparation in python
 Standard library (os, time, xml, urllib)
-Modified version of the fredapi library
+Modified version of the fredapi library (Apache License 2.0 allows modification)
 quandl
-pandas for data analysis
+pandas for data analysis\\
 
-julia
-packages: Gadfly (and the packages that are in turn required by these packages)
+julia for plots
+packages: Gadfly (and the packages that are in turn required by these packages)\\
+
+\section{Instructions on how to replicate the results}
+
+\begin{enumerate}
+	\item download and prepare data with script in python folder (stored in data folder)
+	\item run forecast experiments with scripts in the matlab/forecast\_experiment folder (stored in data\_mcmc folder)
+	\item generate the relevant data for tables and plots with the scripts in analysis, data is stored in data\_plots and data\_tables (prelimary Matlab figures can be viewed as well)
+	\item generate figures with scripts in the julia folder
+\end{enumerate}

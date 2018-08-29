@@ -1,1 +1,129 @@
 \chapter{Forecasting US GDP growth with mixed-frequency dynamic factor models}
+
+Why GDP?
+
+\section{Real-time dataset}
+
+% TODO why not 4.1?
+See table \ref{tbl:dataset}. Details in the data appendix: omitted variables, construction of pseudo-real time data, more information on the sources
+
+% TODO compare with \citet{DAgostinoEtal2016}, \citet{LucianiRicci2014} and \citet{MarcellinoEtal2016}, \citet{BanburaEtal2013}
+
+
+% TODO explain difficulties with survey data
+
+% TODO NaN value for GDP
+
+% TODO discuss omitted variables: Consumption, Income - transfer receipts, sales time series, new orders
+
+\begin{sidewaystable}[!htb]
+	\label{tbl:dataset}
+	\caption{Variables in the real-time dataset}
+	\small
+	\begin{tabular}{|l|l|l|l|l|l|l|}
+		\hline
+		ID     & Description                           & Source & Source ID & Freq. & SA & Transf. \\ %& Lag ? % real-time ?
+		\hline
+		GDP    & Real gross domestic product           & ALFRED & GDPC1     & Q         & yes & $100\cdot\log \Delta$  \\
+		INDPRO & Industrial production index            & ALFRED & INDPRO    & M         & yes & $100\cdot\log \Delta$  \\
+		INC    & Real disposable personal income       & ALFRED & DSPIC96   & M         & yes & $100\cdot\log \Delta$  \\
+		%UR     & Civilian unemployment rate            & ALFRED & UNRATE    & M         & yes & $\Delta$       \\
+		EMP1   & All employees: Total nonfarm payrolls & ALFRED & PAYEMS    & M         & yes & $100\cdot\log \Delta$  \\
+		EMP2   & Civilian Employment Level             & ALFRED & CE16OV    & M         & yes & $100\cdot\log \Delta$  \\
+		HOURS  & Index of aggregate weekly hours       & ALFRED & AWHI      & M         & yes & $100\cdot\log \Delta$  \\
+		RFSALE & Real retail and food services sales   & ALFRED & RRSFS + RSALES & M    & yes & $100\cdot\log \Delta$  \\
+		VSALE  & Light weights vehicle sales     	   & ALFRED & ALTSALES  & M         & yes & $100\cdot\log \Delta$  \\
+		HSALE  & New one family houses sold            & ALFRED & HSN1F     & M         & yes & $100\cdot\log \Delta$  \\
+		HOUST  & Housing starts                        & ALFRED & HOUST     & M         & yes & $100\cdot\log \Delta$  \\
+		PERMIT & Building permits                      & ALFRED & PERMIT    & M         & yes & $100\cdot\log \Delta$  \\
+		CPI    & Consumer price index                  & ALFRED & CPIAUCSL  & M         & yes & $100\cdot\log \Delta$  \\
+		PPI    & Producer price index                  & ALFRED & PPIACO    & M         & no  & $100\cdot\log \Delta$  \\
+		OIL    & Spot crude oil price: WTI             & ALFRED & WTISPLC  & M          & no & $100\cdot\log \Delta$ \\
+		SP500  & S\&P 500 stock index                  & Yahoo Finance & - & M          & no & $100\cdot\log \Delta$ \\
+		USD    & Trade weighted US Dollar index: Broad & ALFRED & TWEXBMTH & M          & no & $100\cdot\log \Delta$  \\
+		FFR    & Effective federal funds rate          & ALFRED & FEDFUNDS & M          & no & $\Delta$ \\
+		MCSI   & Consumer sentiment index              & ALFRED & UMCSENT & M & no  & $\Delta_{12}$    \\ 
+		% real-time: preliminary or final estimates
+		PMI    & Purchasing managers' index            & Quandl & ISM/MAN\_PMI & M      & yes & -    \\ 
+		PHIL   & Philadelphia manufacturing index      & ALFRED\footnote{
+			Data on the release dates has been taken from \url{https://www.philadelphiafed.org/research-and-data/regional-economy/bos-schedule}
+		} & GACDFSA066MSFRBPHI & M & yes & - \\
+		\hline
+		% TODO adjust ALFRED codes in case I'm changing to daily data and do the transformations myself
+	\end{tabular}
+	\vspace{0.3cm}\\
+	Monthly financial data: monthly averages. Comment on real-time data: Financial data, surveys. Comment on series that did not make it into the selection: UNRATE, TCU, Real personal income excluding current transfer receipts (W875RX1), Real Personal Consumption Expenditures, DGORDER, NEWORDER (however, in survey data are questions on new orders)
+\end{sidewaystable}
+
+\section{Design of the forecast experiment}
+
+See table \ref{tbl:release_pattern}: Data releases scattered all over the month and somewhat irregular but in many months releases are approximately clustered into three parts. Ideally, new estimation and forecast every day a new release happens but that's computationally much more demanding. Forecasts should be thought to be generated at the end of the respective date after financial markets have closed.
+
+% TODO motivate forecast origins with release pattern 
+
+7 forecasts (in a narrow sense): M-3D31 (31st Oct 2016) M-2D10 M-2D20 M-2D31 M-1D10 M-1D20 M-1D31\\
+8 nowcasts:    M1D10, M1D20, M1D31, M2D10, M2D20, M2D31, M3D10, M3D20 \\
+3 backcast:    M3D31, M4D10, M4D20
+
+% TODO motiviate last forecast origins
+Advance release in the evaluation period never on or before the 20th day of a month. Therefore, having the last backcast on the 20th day in the month past the quarter makes sense. Only in one instance, after that (Q3 2013 was released on Nov 7, 2013). 
+
+% TODO motivate first forecast origin
+A little bit arbitrary, such that the whole period is 6 months. At each forecast origin, we forecast 2 datapoints of GDP. We do not allow for more heterogeneous dynamics and therefore attempting to make any longer-term forecasts will not be reasonable
+
+% TODO motivate start of estimation date
+Great Moderation, at the first forecast origin also obvious that economic dynamics might have changed around that date 
+
+% 
+
+\begin{table}
+	\label{tbl:release_pattern}
+	\caption{Data releases and forecast origins in January 2017}
+	\begin{tabular}{|l|l|l|l|}
+		\hline
+		Day of month  & Release                            & IDs               & Time period \\
+		\hline
+		3 & Purchasing managers' index         & PMI               & Dec 2016 \\
+		% https://www.instituteforsupplymanagement.org/ISMReport/content.cfm?ItemNumber=10745
+		5 & Light weight vehicle sales         & VS                & Dec 2016 \\
+		6 & Employment situation               & EMP1, EMP2, HOURS & Dec 2016 \\
+		\hline 
+		10 & \multicolumn{3}{|c|}{Backcast for Q4 2016 and nowcast for Q1 2017}                    \\            
+		\hline
+		13 & Producer price index               & PPI               & Dec 2016 \\
+		18 & Consumer price index               & CPI               & Dec 2016 \\
+		18 & Real retail and food services sales& RRSFS             & Dec 2016 \\
+		18 & Industrial production              & IP                & Dec 2016 \\
+		19 & New residential construction       & HOUST, PERMIT     & Dec 2016 \\
+		19 & Philadelphia manufacturing index   & PHIL              & Jan 2017 \\
+		% https://www.philadelphiafed.org/research-and-data/regional-economy/bos-schedule
+		\hline 
+		20 & \multicolumn{3}{|c|}{Backcast for Q4 2016 and nowcast for Q1 2017}            \\            
+		\hline
+		26 & New one family houses sold         & HSALE             & Dec 2016 \\
+		27 & GDP advance estimate               & RGDP              & Q4 2016  \\
+		27 & Consumer sentiment index          & MSCI              & Jan 2017 \\
+		30 & Personal income and outlays        & INC               & Dec 2016 \\
+		% https://data.sca.isr.umich.edu/fetchdoc.php?docid=39424
+		% are the FRED dates correct?
+		31 & Financial variables                & SP500, OIL, USD, FFR & 31 Jan 2017  \\
+		\hline
+		31 & \multicolumn{3}{|c|}{Nowcast for Q1 2017 and forecast for Q2 2017}                 \\
+		\hline
+	\end{tabular}
+	\vspace{0.0cm}\\
+	I have omitted releases that just do revisions
+	Exceptions: GDP once released with a delay of more than one month. Also second and third estimates of GDP typically also towards the end of the month.
+	PHIL sometimes only available in the third part of a month
+	similar with New residential construction, ...
+\end{table}
+
+\section{Results}
+
+% TODO methodology forecast evaluation: MSE, CRPS (why not log-score or MAE?)
+
+% TODO classical results tables (different forecast origins)
+
+% TODO decrease of MSE and CRPS over the 18 different forecast origins for each 
+
+% TODO figure cumulative MSE, cumulative CRPS
