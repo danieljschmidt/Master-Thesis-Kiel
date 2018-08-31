@@ -37,7 +37,7 @@ discuss priors and cite \citet{BaiWang2015}
 compare with other approaches
 
 \begin{figure}[tb]
-	\includegraphics[scale=1.]{../Master-Thesis-Code/plots/plot_arma_problem_2.pdf}
+	%\includegraphics[scale=1.]{../Master-Thesis-Code/plots/plot_arma_problem_2.pdf}
 	\caption{20 000 MCMC draws from $p(\psi_1, \sigma^2_{w,1}|\cdot)$}
 	\small inefficiency factor from $\psi_1$: $\approx 34$, inefficiency factor for $\sigma^2_{w,1}$: $\approx 28$ (rhomax = 1000), 1000 burn-in, true values as initial values, true values $\sigma^2_{w,1}=1$ and $\psi_1=0.0$, I can look up other true values if necessary since random seed is the same, $p=q=1$, $n=20$, $T=300$ (corresponds to 25 years of data), effectively only 100 data points, problem becomes less severe for larger sample size, e.g. $T=3000$ with same parameters, inefficiency factors lower, narrower region in the parameter space, problem generalizes to $q>1$ but is then more difficult to illustrate graphically. less severe with tight priors.
 	\label{fig:arma_problem}

@@ -1,16 +1,16 @@
 \chapter{Dynamic factor models and mixed-frequency data}\label{sec:dfm}
 
-\section{Dynamic factor models}
+This section is solely about model specification and and does not explain how the considered models can be estimated. First, I discuss dynamic factor models in general; then I explain how these models can deal with the ``ragged edge'' of macroeconomic data and different sampling frequencies. The final subsection is about model specifications that are used for nowcasting GDP growth.
 
-% introductory section: 3/2 - 2 pages
+\section{Dynamic factor models}
 
 % TODO mean zero!!!
 
 As a starting point, consider a static factor model
 \begin{align}
-y_t = \mu + \Lambda f_t + u_t \label{eq:static_fm}
+y_t = \Lambda f_t + u_t \label{eq:static_fm}
 \end{align}
-where $y_t$ is a $n \times 1$ column vector of observations, $f_t$ is a $m \times 1$ column vector of unobserved factors and $u_t$ is a $n \times 1$ vector of i.i.d.~normally distributed errors. Typically, $m$ is much smaller than $n$ and therefore the static factor model provides a parsimonious description of the covariance between the variables in $y_t$. The $n \times m$ matrix $\Lambda$ contains the so-called factor loadings that describe [how the variables are related to the factors???]. % TODO: rewrite + identification
+where $y_t$ is a $n \times 1$ column vector of (de-meaned) observations, $f_t$ is a $m \times 1$ column vector of unobserved factors and $u_t$ is a $n \times 1$ vector of i.i.d.~normally distributed errors. Typically, $m$ is much smaller than $n$ and therefore the static factor model provides a parsimonious description of the covariance between the variables in $y_t$. The $n \times m$ matrix $\Lambda$ contains the so-called factor loadings that describe how the variables are related to the factors. 
 
 As the index $t$ already suggests, we would like to apply a factor model to time series data because the basic idea behind the static factor model - describing the interdependences between observed variables by a smaller number of unobserved variables - is also likely to be helpful in a time series context. For example, consider a one-factor model with variables $y_t$ that are related to real economic activity. In such a model, $f_t$ can be seen as a business cycle index and is likely to explain a huge fraction of the variability in $y_t$. 
 
